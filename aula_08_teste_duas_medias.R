@@ -49,6 +49,10 @@ plot(ellipse(Sd/n,centre=d_bar,level=1-alpha,npoints=1000),type='l',asp=1,xlim=c
 text(d_bar[1],d_bar[2],"[-9.36,13.27]")
 text(0,0,"[0,0]")
 
+# Olhando o grafico, percebemos que o lab2 tem medicoes sisteameticamente maiores na var 2 e menores na var 1
+# Observe que no univariado, projetando a elipse, o 0 eh englobado
+# Confirmamos isso abaixo
+
 ##Intervalos Simulataneos
 Ls=c()
 Li=c()
@@ -60,7 +64,6 @@ for (i in 1:p) {
 
 Lim=rbind(Ls,Li)
 #colnames(Lim)<-colnames(x)
-
 
 
 ############univariados Bonferroni
@@ -102,6 +105,8 @@ ggpairs(X[,-5], mapping=aes(colour=as.factor(X[,5])), upper=list(combo= 'blank',
 
 ###############m?dia e vari?ncia das amostras
 
+# calculando as estatisticas de cada grupo 
+#(-5 remove a coluna que indica o grupo pois nao queremos calcular media e var)
 x1_bar=colMeans(X[which(X$am==0),-5])
 S1=cov(X[which(X$am==0),-5])
 n1=nrow(X[which(X$am==0),-5])
