@@ -89,6 +89,32 @@ R2
 
 #Observa-se o mesmo resultados para a variavel convertida para metros por segundo
 
-
 #### Cap 2 ####
 
+#### 2.30 ####
+
+mu = c(4,3,2,1)
+sigma = rbind(c(3,0,2,2), c(0,1,1,0), c(2,1,9,-2), c(2,0,-2,4))
+
+X = rmvnorm(100, mean = mu, sigma = sigma)
+
+X1 = X[,1:2]
+X1 = t(X1)
+X2 = X[,3:4]
+X2 = t(X2)
+
+A = c(1,2)
+B = rbind(c(1,-2), c(2,-1))
+
+## a) E(X1) 
+eX1 = apply(X1, 1, mean)
+eX1
+
+## b) E(AX1)
+AX1 = A%*%X1
+eAX1 = apply(AX1, 1, mean)
+eAX1
+
+## c) Cov(X1)
+covX1 = cov(t(X1))
+covX1
