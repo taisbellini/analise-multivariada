@@ -239,3 +239,20 @@ covX1X2
 covAX1BX2 = cov(t(AX1), t(BX2))
 covAX1BX2
 
+#### Cap 3 ####
+
+#### 3.2 ####
+
+# a)
+X = cbind(c(3,6,3), c(4,-2,1))
+colnames(X) = c("x1", "x2")
+plot(X)
+
+x_barra = apply(X, 2, mean)
+x_barra
+
+# c)
+
+
+
+
