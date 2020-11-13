@@ -98,23 +98,144 @@ sigma = rbind(c(3,0,2,2), c(0,1,1,0), c(2,1,9,-2), c(2,0,-2,4))
 
 X = rmvnorm(100, mean = mu, sigma = sigma)
 
+# X1 100x2
 X1 = X[,1:2]
-X1 = t(X1)
+
+# X2 100x2
 X2 = X[,3:4]
-X2 = t(X2)
 
 A = c(1,2)
 B = rbind(c(1,-2), c(2,-1))
 
+# AX1 1x100
+AX1 = A%*%t(X1)
+AX1
+
+# BX2 2x100
+BX2 = B%*%t(X2)
+BX2
+
 ## a) E(X1) 
-eX1 = apply(X1, 1, mean)
+# 1x2
+eX1 = apply(X1, 2, mean)
 eX1
 
 ## b) E(AX1)
-AX1 = A%*%X1
+# escalar
 eAX1 = apply(AX1, 1, mean)
 eAX1
 
 ## c) Cov(X1)
-covX1 = cov(t(X1))
+# 2x2
+covX1 = cov(X1)
 covX1
+
+## d) Cov(AX1)
+# escalar
+covAX1 = cov(t(AX1))
+covAX1
+
+## e) E(X2)
+# 1x2
+eX2 = apply(X2, 2, mean)
+eX2
+
+## f) E(BX2)
+# 1x2
+eBX2 = apply(BX2, 1, mean)
+eBX2
+
+## g) Cov(X2)
+# 2x2
+covX2 = cov(X2)
+covX2
+
+## h) Cov(BX2)
+# 2x2
+covBX2 = cov(t(BX2))
+covBX2
+
+## i) Cov(X1, X2)
+# 2x2
+covX1X2 = cov(X1,X2)
+covX1X2
+
+## j) Cov(AX1, BX2)
+# 1x2
+covAX1BX2 = cov(t(AX1), t(BX2))
+covAX1BX2
+
+#### 2.31 ####
+remove(list = ls())
+mu = c(4,3,2,1)
+sigma = rbind(c(3,0,2,2), c(0,1,1,0), c(2,1,9,-2), c(2,0,-2,4))
+
+X = rmvnorm(100, mean = mu, sigma = sigma)
+
+# X1 100x2
+X1 = X[,1:2]
+
+# X2 100x2
+X2 = X[,3:4]
+
+A = c(1,-1)
+B = rbind(c(2,-1), c(0,1))
+
+# AX1 1x100
+AX1 = A%*%t(X1)
+AX1
+
+# BX2 2x100
+BX2 = B%*%t(X2)
+BX2
+
+## a) E(X1) 
+# 1x2
+eX1 = apply(X1, 2, mean)
+eX1
+
+## b) E(AX1)
+# escalar
+eAX1 = apply(AX1, 1, mean)
+eAX1
+
+## c) Cov(X1)
+# 2x2
+covX1 = cov(X1)
+covX1
+
+## d) Cov(AX1)
+# escalar
+covAX1 = cov(t(AX1))
+covAX1
+
+## e) E(X2)
+# 1x2
+eX2 = apply(X2, 2, mean)
+eX2
+
+## f) E(BX2)
+# 1x2
+eBX2 = apply(BX2, 1, mean)
+eBX2
+
+## g) Cov(X2)
+# 2x2
+covX2 = cov(X2)
+covX2
+
+## h) Cov(BX2)
+# 2x2
+covBX2 = cov(t(BX2))
+covBX2
+
+## i) Cov(X1, X2)
+# 2x2
+covX1X2 = cov(X1,X2)
+covX1X2
+
+## j) Cov(AX1, BX2)
+# 1x2
+covAX1BX2 = cov(t(AX1), t(BX2))
+covAX1BX2
+
