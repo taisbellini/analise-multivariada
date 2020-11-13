@@ -92,7 +92,7 @@ R2
 #### Cap 2 ####
 
 #### 2.30 ####
-
+remove(list = ls())
 mu = c(4,3,2,1)
 sigma = rbind(c(3,0,2,2), c(0,1,1,0), c(2,1,9,-2), c(2,0,-2,4))
 
@@ -246,13 +246,33 @@ covAX1BX2
 # a)
 X = cbind(c(3,6,3), c(4,-2,1))
 colnames(X) = c("x1", "x2")
-plot(X)
 
 x_barra = apply(X, 2, mean)
 x_barra
 
-# c)
+plot(X, xlim=c(0,6), ylim = c(-4,4), xlab = "x1", ylab="x2")
+points(x_barra[1], x_barra[2], col = "blue")
+text(x_barra[1],x_barra[2],"media amostral", pos = 3)
 
 
+# c) 
+d1 = c(-1,2,-1)
+d2 = c(3,-3,0)
+d1td2 = t(d1)%*%d2
+Ld1 = sqrt(6)
+Ld2 = sqrt(18)
+cos = d1td2/(Ld1*Ld2)
+cos
 
+X = cbind(c(3,6,3), c(4,-2,1))
+var(X)
+cor(X)
+
+#### 3.5 ####
+
+X1 = cbind(c(9,5,1), c(1,3,2))
+var(X1)
+
+X2 = cbind(c(3,6,3), c(4,-2,1))
+var(X2)
 
