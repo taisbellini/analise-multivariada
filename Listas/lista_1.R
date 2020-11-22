@@ -276,3 +276,15 @@ var(X1)
 X2 = cbind(c(3,6,3), c(4,-2,1))
 var(X2)
 
+
+#### 3.9 ####
+remove(list=ls())
+
+X = cbind(c(12,18,14,20,16), c(17,20,16,18,19), c(29,38,30,38,35))
+x_barra = apply(X, 2, mean)
+one = rep(1,5)
+x = one%*%t(x_barra)
+X - x
+
+S = cov(X)
+det(S)
