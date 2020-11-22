@@ -228,6 +228,32 @@ text(0,0,"[0,0]")
 ##a) comparar as 3 esp?cies 2x2.
 x=iris
 ##1:50 - setosa, 51:100 - versicolor, 101:150 - virginica
+ggpairs(x[,-5], aes(colour=as.factor(x[,5])))
+
+fit12 = hotelling.test(x[1:50,-5], x[51:100,-5])
+fit12
+#Test stat:  625.46 
+#Numerator df:  4 
+#Denominator df:  95 
+#P-value:  0 
+
+fit13 = hotelling.test(x[1:50,-5], x[101:150,-5])
+fit13
+#Test stat:  1182.6 
+#Numerator df:  4 
+#Denominator df:  95 
+#P-value:  0 
+
+fit23 = hotelling.test(x[51:100,-5], x[101:150,-5])
+fit23
+#Test stat:  86.148 
+#Numerator df:  4 
+#Denominator df:  95 
+#P-value:  0 
+
+#Quanto maior a stat, maior a diferenca entre o vetor de diferenca entre as medias e o vetor de 0,
+#ou seja, mais distantes sao as medias dos dois grupos
+
 
 ####b) Montar IC T2 e bonferroni para dif m?dias em cada uma das 4 vari?veis 
 x1_bar=colMeans(x[1:50,-5])
