@@ -288,3 +288,132 @@ X - x
 
 S = cov(X)
 det(S)
+
+#### 3.11 ####
+
+# definindo S e D ^ -1/2
+S = cbind(c(252.04, -68.43), c(-68.43, 123.67))
+minDsqr = cbind(c(1/sqrt(252.04), 0), c(0, 1/sqrt(123.67)))
+
+s11 = 252.04
+s12 = s21 = -68.43
+s22 = 123.67
+
+# Definindo R
+r11 = s11/(sqrt(s11)*sqrt(s11))
+r12 = s12/(sqrt(s11)*sqrt(s22))
+r21 = s21/(sqrt(s22)*sqrt(s11))
+r22 = s22/(sqrt(s22)*sqrt(s22))
+R = cbind(c(r11, r12), c(r12, r22))
+
+# Calculando R pela definicao do resultado 3-29
+R_calc = minDsqr%*%S%*%minDsqr
+
+R
+R_calc
+#Observa-se que ambos sao iguais, portanto, R = D^-1/2 S D^-1/2
+
+#Definindo D^1/2
+Dsqr = cbind(c(sqrt(252.04), 0), c(0, sqrt(123.67)))
+# Calculando S pela definicao do resultado 3-30
+S_calc = Dsqr%*%R%*%Dsqr
+
+S
+S_calc
+#Observa-se que ambos sao iguais, portanto, S = D^1/2 R D^1/2
+
+#### 3.14 ####
+remove(list = ls())
+X = cbind(c(9,5,1), c(1,3,2))
+x_barra = as.matrix(apply(X, 2, mean))
+S = cov(X)
+
+c = as.matrix(c(-1,2))
+b = as.matrix(c(2,3))
+
+sample_mean_c = t(c)%*%x_barra
+sample_mean_c
+sample_mean_b = t(b)%*%x_barra
+sample_mean_b
+
+sample_var_c = t(c)%*%S%*%c
+sample_var_c
+
+sample_var_b = t(b)%*%S%*%b
+sample_var_b
+
+sample_cov = t(b)%*%S%*%c
+sample_cov
+
+
+#### 3.19 ####
+remove(list = ls())
+
+#Definindo S e R
+S = cbind(c(0.856,0.635,0.173), c(0.635, 0.568, 0.127), c(0.173,0.128, 0.171))
+
+r11 = S[1,1]/(sqrt(S[1,1])*sqrt(S[1,1]))
+r12 = S[1,2]/(sqrt(S[1,1])*sqrt(S[2,2]))
+r13 = S[1,3]/(sqrt(S[1,1])*sqrt(S[3,3]))
+r21 = S[2,1]/(sqrt(S[2,2])*sqrt(S[1,1]))
+r22 = S[2,2]/(sqrt(S[2,2])*sqrt(S[2,2]))
+r23 = S[2,3]/(sqrt(S[2,2])*sqrt(S[3,3]))
+r31 = S[3,1]/(sqrt(S[3,3])*sqrt(S[1,1]))
+r32 = S[3,2]/(sqrt(S[3,3])*sqrt(S[2,2]))
+r33 = S[3,3]/(sqrt(S[3,3])*sqrt(S[3,3]))
+
+
+R = cbind(c(r11, r12, r13), c(r12, r22, r23), c(r31, r32, r33))
+
+# det(S) pelo calculo de determinante:
+det_S = det(S)
+
+# det(S) pelo calculo do exercicio:
+det_S_calc = S[1,1]*S[2,2]*S[3,3]*det(R)
+
+#Observa-se que os dois sao iguais
+det_S
+det_S_calc
+
+#### 3.20 ####
+remove(list = ls())
+
+# Carrega e limpa os dados
+split = function(x){
+  row = strsplit(trimws(x), " ", fixed = T)
+  row = unlist(row)
+  row = row[]
+  return(row[-2])
+}
+
+data = read.table("../Wichern_data/T3-2.dat", sep = "\t", stringsAsFactors = F)
+data = lapply(data[,1], split)
+data = lapply(data, function(z){ z[!is.na(z) & z != ""]})
+data = do.call(rbind, data)
+colnames(data) = c("x1", "x2")
+X = apply(data, 2, function(x){as.numeric(x)})
+
+# a) 
+
+# Obtendo as estatisticas resumo
+
+x_barra = apply(X, 2, mean)
+S = cov(X)
+
+# Vamos definir a combinacao a'X
+a = as.matrix(c(-1,1))
+
+sample_mean = t(a)%*%x_barra
+sample_var = t(a)%*%S%*%a
+
+# b) 
+
+X_diff = apply(X, 1, function(x){x[2] - x[1]})
+sample_mean_first = mean(X_diff)
+sample_var_first = var(X_diff)
+
+sample_mean
+sample_mean_first
+
+sample_var
+sample_var_first
