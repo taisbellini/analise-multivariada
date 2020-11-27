@@ -382,7 +382,6 @@ remove(list = ls())
 split = function(x){
   row = strsplit(trimws(x), " ", fixed = T)
   row = unlist(row)
-  row = row[]
   return(row[-2])
 }
 
@@ -417,3 +416,130 @@ sample_mean_first
 
 sample_var
 sample_var_first
+
+#### Cap 4 ####
+
+#### 4.2 ####
+
+#b) 
+
+remove(list = ls())
+require(mvtnorm)
+require(plot3D)
+
+mu = c(0,2)
+sigma = matrix(c(2, 0.5*sqrt(2), 0.5*sqrt(2),1), ncol = 2)
+
+autovv = eigen(sigma)
+
+#### 4.3 ####
+remove(list = ls())
+
+# d)
+sigma = cbind(c(1,-2, 0), c(-2,5, 0), c(0,0,2))
+A = rbind(c(1/2, 1/2, 0), c(0,0,1))
+A%*%sigma%*%t(A)
+
+# e)
+Ae = rbind(c(0, 1, 0), c(-5/2,1,-1))
+Ae%*%sigma%*%t(Ae)
+
+#### 4.5 ####
+
+
+# b)
+remove(list = ls())
+
+sig11 = 5
+sig12 = c(-2, 0)
+sig21 = matrix(c(-2,0))
+sig22 = matrix(c(1,0,0,2), ncol = 2)
+
+sig = sig11 - sig12%*%solve(sig22)%*%sig21
+
+# c)
+remove(list = ls())
+
+sig11 = 2
+sig12 = c(1, 2)
+sig21 = matrix(c(1,2))
+sig22 = matrix(c(1,1,1,3), ncol = 2)
+
+sig = sig11 - sig12%*%solve(sig22)%*%sig21
+
+#### 4.23 ####
+require(car)
+
+# a) 
+remove(list = ls())
+data = c(-0.6, 3.1, 25.3, -16.8, -7.1, -6.2, 25.2, 22.6, 26)
+qqPlot(data, distribution = "norm")
+
+qq = qqnorm(data)
+qqline(data)
+
+# b) Coeficiente 
+cor(qq$x, qq$y)
+
+#### 4.24 ####
+remove(list = ls())
+
+# Carrega e limpa os dados
+split = function(x){
+  row = strsplit(trimws(x), " ", fixed = T)
+  row = unlist(row)
+  row = row[row != ""]
+  return(row)
+}
+
+data = read.delim("../Wichern_data/P1-4.DAT", header = F, sep = "\t", stringsAsFactors = F)
+data = lapply(data[,1], split)
+data = do.call(rbind, data)
+colnames(data) = c("x1", "x2", "x3")
+X = apply(data, 2, function(x){as.numeric(x)})
+
+# a) 
+
+#qqplot x1
+qqx1 = qqnorm(X[,1])
+qqx1
+qqline(X[,1])
+qqPlot(X[,1])
+
+# Dentro da banda de confianca, mas uma linha nao muito reta
+
+# qqplot x2
+qqx2 = qqnorm(X[,2])
+qqx2
+qqline(X[,2])
+qqPlot(X[,2])
+
+# parece mais proximo da normal que x1, pontos mais em cima da linha
+
+# b) 
+n = length(X[,1])
+rqx1 = cor(qqx1$x, qqx1$y)
+# [1] 0.9402035
+# valor na tabela: 0.9351
+# Nao rejeita hipotese de normalidade pois rq > valor da tabela
+
+n = length(X[,2])
+rqx2 = cor(qqx2$x, qqx1$y)
+# [1] 0.9402035
+# valor na tabela: 0.6818
+# Rejeita hipotese de normalidade pois rq < valor da tabela
+
+
+#### 4.25 ####
+
+# Primeiro calcula a distancia estatistica
+# Esta distancia, se X eh Normal, tem dist chi-quadrado
+# Verificamos entao o qqplot para ver se d se aproxima da chi-quadrado
+
+d2<-mahalanobis(X, colMeans(X), cov(X), inverted = FALSE) 
+qqPlot(d2, dist="chisq", df=ncol(X), main=paste("Chi-dist"), ylab=paste("d2"))
+
+# Observa-se que os pontos estão en sua maioria dentro da banda de confiança
+# e que estão relativamente proximos da reta
+
+
