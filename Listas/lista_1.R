@@ -492,7 +492,7 @@ split = function(x){
   return(row)
 }
 
-data = read.delim("../Wichern_data/P1-4.DAT", header = F, sep = "\t", stringsAsFactors = F)
+data = read.table("../Wichern_data/P1-4.DAT", header = F, sep = "\t", stringsAsFactors = F)
 data = lapply(data[,1], split)
 data = do.call(rbind, data)
 colnames(data) = c("x1", "x2", "x3")
@@ -532,7 +532,7 @@ rqx2 = cor(qqx2$x, qqx1$y)
 
 #### 4.25 ####
 
-# Primeiro calcula a distancia estatistica
+# Primeiro calcula a distancia estatistica ao quadrado
 # Esta distancia, se X eh Normal, tem dist chi-quadrado
 # Verificamos entao o qqplot para ver se d se aproxima da chi-quadrado
 
@@ -541,5 +541,202 @@ qqPlot(d2, dist="chisq", df=ncol(X), main=paste("Chi-dist"), ylab=paste("d2"))
 
 # Observa-se que os pontos estão en sua maioria dentro da banda de confiança
 # e que estão relativamente proximos da reta
+
+
+#### 4.26 ####
+remove(list = ls())
+require(ggplot2)
+age = c(1, 2, 3, 3, 4, 5, 6, 8,9,11)
+price = c(18.95, 19, 17.95,15.54,14,12.95,8.94, 7.49, 6, 3.99)
+
+data = cbind(age, price)
+colnames(data) = c("x1", "x2")
+
+# a) 
+d2<-mahalanobis(data, colMeans(data), cov(data), inverted = FALSE) 
+d2
+# b) 
+
+qch = qchisq(0.5, 2)
+
+in50 = (d2 <= qch)
+sum(in50)
+
+data_contour = data.frame(cbind(data, in50))
+
+pl <- ggplot(data_contour, aes(x1, x2))
+pl + geom_point(aes(color = in50))
+
+#c) 
+qqPlot(d2, dist="chisq", df=ncol(data), main=paste("Chi-dist"), ylab=paste("d2"))
+qq = qqnorm(data[,2])
+cor(qq$x, qq$y)
+
+#### 4.28 ####
+remove(list = ls())
+# Carrega e limpa os dados
+split = function(x){
+  row = strsplit(trimws(x), " ", fixed = T)
+  row = unlist(row)
+  row = row[row != ""]
+  return(row)
+}
+
+# pag 60 pdf
+data = read.table("../Wichern_data/T1-5.dat", header = F, sep = "\t", stringsAsFactors = F)
+data = lapply(data[,1], split)
+data = do.call(rbind, data)
+colnames(data) = paste("x", seq(1:7), sep = "")
+X = apply(data, 2, function(x){as.numeric(x)})
+
+solar_rad = X[,2]
+
+qq = qqnorm(solar_rad)
+qq
+qqline(solar_rad)
+qqPlot(solar_rad)
+
+# Observa-se bastante pontos fora da banda nos quantis mais inferiores
+cor(qq$x, qq$y)
+#[1] 0.9693258
+
+
+#### 4.29 ####
+
+#a) 
+d2<-mahalanobis(X[,5:6], colMeans(X[,5:6]), cov(X[,5:6]), inverted = FALSE) 
+d2
+
+#b) 
+qch = qchisq(0.5, 2)
+
+in50 = (d2 <= qch)
+sum(in50)
+paste("Proportion:", sum(in50)/length(d2))
+
+#c) 
+qqPlot(d2, dist="chisq", df=ncol(X[,5:6]), main=paste("Chi-dist"), ylab=paste("d2"))
+
+
+#### 4.34 ####
+remove(list = ls())
+
+# Carrega e limpa os dados
+split = function(x){
+  row = strsplit(trimws(x), " ", fixed = T)
+  row = unlist(row)
+  row = row[row != ""]
+  return(row)
+}
+
+# pag 64 pdf
+data = read.table("../Wichern_data/T1-8.DAT", header = F, sep = "\t", stringsAsFactors = F)
+data = lapply(data[,1], split)
+data = do.call(rbind, data)
+colnames(data) = paste("x", seq(1:6), sep = "")
+X = apply(data, 2, function(x){as.numeric(x)})
+
+colnames(X) = paste("x", seq(1:6), sep ="")
+
+###Verificando Normalidade univariada###
+##qqplot
+par(mfrow=c(3,2)) 
+for( i in 1:ncol(X)){
+  qqPlot(X[,i], dist="norm", main=paste("x_",i), ylab=paste("empirical"))}
+
+###shapiro univariado###
+W=rep(0,ncol(X))
+for(k in ncol(X)){
+  W[k]=shapiro.test(X[,k])$p.value }
+W
+
+### coef correlacao ###
+## ref value 0.5: 0.9591
+Q=rep(0,ncol(X))
+for(k in ncol(X)){
+  qq = qqnorm(X[,k])
+  Q[k] = cor(qq$x, qq$y)
+}
+Q
+sum(Q >= 0.9591)
+
+# Tanto o teste shapiro quanto o teste do coeficiente de correlacao rq 
+# Indicam que apenas para a variavel x6 aceitariamos a hipotese de normalidade
+
+### Verificando a normalidade bivariada ###
+# Fazendo pelo teste da distancia estatistica e contorno de 50%
+biv_test = rbind(
+  c(1, 2),
+  c(1, 3), 
+  c(1, 4),
+  c(1, 5),
+  c(1, 6),
+  c(2, 3),
+  c(2, 4),
+  c(2, 5), 
+  c(2, 6),
+  c(3, 4),
+  c(3, 5),
+  c(3, 6),
+  c(4, 5),
+  c(4, 6),
+  c(5, 6)
+)
+biv_test = cbind(biv_test, rep(0, length(biv_test[,1])))
+colnames(biv_test) = c("var1", "var2", "proportion 50%")
+
+for(row in length(biv_test[,1])){
+  vars = biv_test[row,-3]
+  X_biv = X[,vars]
+  d2<-mahalanobis(X_biv, colMeans(X_biv), cov(X_biv), inverted = FALSE)  ##dist multvariada ~~ QUi-q
+  qch = qchisq(0.5, 2)
+  in50 = (d2 <= qch)
+  biv_test[row, 3] = sum(in50)/length(d2)
+}
+biv_test
+
+# Apenas 5 e 6 apresentam valor proximo de 50%, mas ainda nao exatamente
+
+#### 4.36 ####
+remove(list = ls())
+data = read.table("../Wichern_data/T1-9.dat", header = F, sep = "\t", stringsAsFactors = F)
+head(data)
+
+###Verificando Normalidade univariada###
+##qqplot
+par(mfrow=c(3,3)) 
+for( i in 2:ncol(data)){
+  qqPlot(data[,i], dist="norm", main=paste("x_",i), ylab=paste("empirical"))}
+
+###shapiro univariado###
+W=rep(0,ncol(data))
+for(k in ncol(data[,-1])){
+  W[k]=shapiro.test(data[,k])$p.value }
+W
+
+### coef correlacao ###
+## ref value 0.5: 0.9787
+Q=rep(0,ncol(data))
+for(k in ncol(data)){
+  qq = qqnorm(data[,k])
+  Q[k] = cor(qq$x, qq$y)
+}
+Q
+sum(Q >= 0.9787)
+
+# Nao ha evidencia que nenhuma das variaveis tenha distribuicao normal
+
+###Teste de Normalidade Multivariada###
+x=as.matrix(data[,-1])
+mvShapiro.Test(x)  ## teste Shapiro
+#p-value = 1.201e-15
+# Nao ha evidencia de normalidade multivariada
+
+#calcula a distancia estatistica 
+#depois validamos se o d2 tem dist quiquadrado (que eh o caso da normal multivariada)
+d2<-mahalanobis(x, colMeans(x), cov(x), inverted = FALSE)  ##dist multvariada ~~ QUi-q
+d2
+
+qqPlot(d2, dist="chisq", df=ncol(x), main=paste("Chi-dist"), ylab=paste("d2"))
 
 
