@@ -1,0 +1,292 @@
+---
+title: "Lista 1 - Cap 5 e 6"
+author: "Tais Bellini"
+date: "11/28/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Cap 5
+
+### 5.1
+
+#### a) Avaliar $T^2$ para testar $H_0:\mathbf{\mu_0}^\intercal = [7, 11]$ para o seguinte conjunto de dados:
+
+$$ X = \begin{bmatrix}
+        2 & 12 \\
+        8 & 9 \\
+        6 & 9 \\
+        8 & 10 \\ 
+        \end{bmatrix}$$
+
+Sabemos que:
+$T^2 = n(\mathbf{\bar{x}} - \mathbf{\mu_0})^\intercal S^{-1} (\mathbf{\bar{x}} - \mathbf{\mu_0})$. Ainda, $(\mathbf{\bar{x}} - \mathbf{\mu_0})^\intercal S^{-1} (\mathbf{\bar{x}} - \mathbf{\mu_0})$ é a distância estatítica entre $\bar{x}$ e $\mu_0$. Assim, usamos a função _mahalanobis_ do R para calcular $T^2$:
+
+```{r}
+X = cbind(c(2,8,6,8), c(12,9,9,10))
+
+n = nrow(X)
+p = ncol(X)
+x_bar = apply(X, 2, mean)
+mu = c(7,11)
+S = cov(X)
+T2_cal<-n*mahalanobis(x_bar, mu, S, inverted = FALSE)
+T2_cal
+```
+
+Temos, então que $T^2$ = `r T2_cal`.
+
+#### b) Especificar a distribuição de $T^2$ para (a).
+
+A distribuição de $T^2$ se dá por: $$T^2 \sim \frac{(n-1)p}{(n-p)}F_{p,n-p}(\alpha)$$
+
+Portanto, no caso dos dados da questão (a), temos: $$T^2 \sim \frac{6}{2}F_{2,2}(\alpha)$$.
+
+
+#### c) Testar $H_0$ ao nível de significância $\alpha = 0.05$. 
+
+Rejeitamos $H_0$ se $$ T^2 > \frac{6}{2}F_{2,2}(\alpha) $$:
+
+```{r}
+alpha = 0.05
+q=qf(1-alpha,p,n-p)*((n-1)*p)/(n-p)
+q
+```
+
+Como $T^2$ = `r T2_cal` $<$ $\frac{6}{2}F_{2,2}(\alpha)$ = `r q`, não rejeitamos $H_0$ ao nível de significância de 5%.
+
+### 5.4
+
+#### a) Usando os dados da tabela 5.1, determinar os eixos da elipse de 90% de confiança para $\mathbf{\mu}$. Determine o comprimento destes eixos.
+
+Dados: $X1 = sweat\ rate, X2 = sodium\ content, X3 = potassium\ content$
+```{r}
+remove(list = ls())
+data = read.delim("../Wichern_data/T5-1.DAT", header = F, sep = "", stringsAsFactors = F)
+colnames(data) = c("x1", "x2", "x3")
+n = nrow(data)
+p = ncol(data)
+alpha = 0.1
+head(data)
+```
+
+Para determinar a elipse de 90% de confiança deste banco de dados, calculamos a distância estatística ao quadrado generalizada $d^2$ e comparamos com $\frac{(20-1)3}{n(20-3)}F_{3,17}(\alpha = 0.1)$. Os dados que possuírem $d^2 \leq \frac{(20-1)3}{n(20-3)}F_{3,17}(0.1)$ estão dentro da elipse. 
+
+Ainda, calculamos os autovetores $\mathbf{e_1}, \mathbf{e_2}\ e\ \mathbf{e_3}$ para determinar os eixos, bem como os autovalores $\lambda_1, \lambda_2\ e\ \lambda_3$, que vão determinar a distância do centro (dado por $\mathbf{\mu}$) de cada eixo, que são definidas por: $$d_1 = \sqrt{\lambda_1}\sqrt{\frac{(19)3}{17}F_{3,17}(0.1)}$$ $$d_2 = \sqrt{\lambda_2}\sqrt{\frac{(19)3}{(20(17)}F_{3,17}(0.1)}$$ $$d_3 = \sqrt{\lambda_2}\sqrt{\frac{(19)3}{20(17)}F_{3,17}(0.1)}$$.
+
+A distância do centro $\mathbf{\mu}$ da elipse até a borda dos 3 eixos é calculada da seguinte forma:
+```{r}
+x_barra = colMeans(data)
+S = cov(data)
+
+eig = eigen(S)
+F_cal = qf(1-alpha,p,n-p)*((n-1)*p)/(n*(n-p))
+
+d1 = sqrt(eig$values[1])*sqrt(F_cal)
+d2 = sqrt(eig$values[2])*sqrt(F_cal)
+d3 = sqrt(eig$values[3])*sqrt(F_cal)
+d1
+d2
+d3
+```
+
+Já os eixos, são dados por: $$eixo_1 = \sqrt{\lambda_1}\sqrt{\frac{(19)3}{17}F_{3,17}(0.1)}\mathbf{e_1}$$ $$ eixo_2 =\sqrt{\lambda_2}\sqrt{\frac{(19)3}{(20(17)}F_{3,17}(0.1)}\mathbf{e_2}$$ $$ eixo_3 = \sqrt{\lambda_2}\sqrt{\frac{(19)3}{20(17)}F_{3,17}(0.1)}\mathbf{e_3}$$.
+
+São calculados da seguinte maneira: 
+```{r}
+eixo1 = d1*eig$vectors[,1]
+eixo2 = d2*eig$vectors[,2]
+eixo3 = d3*eig$vectors[,3]
+eixo1
+eixo2
+eixo3
+```
+
+#### b) Construir _QQ-plots_ para as variáveis do banco. Construir os _scatter plots_ para as combinações de variáveis. Responder: a suposição de normalidade multivariada é justificada?
+
+QQ-Plot para cada variável: _sweat rate_, _sodium content_, _potassium content_.
+
+```{r, echo=F, include=F}
+require(car)
+```
+
+```{r}
+par(mfrow=c(1,3))
+for( i in 1:ncol(data)){
+  qqPlot(data[,i], dist="norm", main=paste("x_",i), ylab=paste("empirical"))}
+
+```
+
+Observa-se pelos gráficos acima que os pontos estão dentro da banda de conficança no _QQ-Plot_ e os pontos se aproximam de uma linha reta, sugerindo que justifica-se a suposição de normalidade.
+
+_Scatter Plots_:
+
+```{r, echo=F, include=F}
+require(GGally)
+require(ggplot2)
+```
+
+Abaixo, o scatter plots de todas as combinações das variáveis $x_1=sweat\ rate, x_2 = sodium\ content,\ e\ x_3 = potassium\ content$:
+
+```{r}
+ggpairs(data)
+```
+
+Parecem formar elipses, o que indica que justifica-se a suposição de normalidade bivariada. O par de variáveis que menos se parece com uma elipse é o par $(x_2, x_3)$.
+
+Vamos agora observar cada par e desenhar a elipse de 90% de confiança e verificar a proporção de pontos que ficam de fora:
+
+```{r, echo=F, include=F}
+require(grid)
+require(gridExtra)
+```
+
+
+```{r}
+par(mfrow=c(1,3))
+p1 = ggplot(data, aes(x = x1, y = x2)) +
+  geom_point(size = 2) +
+  theme_minimal() + 
+  stat_ellipse(geom="polygon", 
+                      alpha = 0.2,
+                      show.legend = FALSE, 
+                      level = 0.90)
+
+p2 = ggplot(data, aes(x = x1, y = x3)) +
+  geom_point(size = 2) +
+  theme_minimal() + 
+  stat_ellipse(geom="polygon", 
+                      alpha = 0.2,
+                      show.legend = FALSE, 
+                      level = 0.90)
+
+p3 = ggplot(data, aes(x = x2, y = x3)) +
+  geom_point(size = 2) +
+  theme_minimal() + 
+  stat_ellipse(geom="polygon", 
+                      alpha = 0.2,
+                      show.legend = FALSE, 
+                      level = 0.90)
+
+grid.arrange(p1, p2, p3, ncol = 3)
+
+
+```
+
+
+```{r}
+qch = qchisq(0.9, 2)
+
+x1x2 = data[,c(1,2)]
+d2_1<-mahalanobis(x1x2, colMeans(x1x2), cov(x1x2), inverted = FALSE)
+in90 = (d2_1 <= qch)
+prop1 = sum(in90/length(d2_1))
+
+x1x3 = data[,c(1,3)]
+d2_2<-mahalanobis(x1x3, colMeans(x1x3), cov(x1x3), inverted = FALSE)
+qch = qchisq(0.9, 2)
+in90 = (d2_2 <= qch)
+prop2 = sum(in90/length(d2_2))
+
+x2x3 = data[,c(2,3)]
+d2_3<-mahalanobis(x2x3, colMeans(x2x3), cov(x2x3), inverted = FALSE)
+qch = qchisq(0.9, 2)
+in90 = (d2_3 <= qch)
+prop3 = sum(in90/length(d2_3)) 
+```
+
+No caso das variáveis _sweat rate_ e _sodium rate_, temos que a proporção de pontos que estão dentro da elipse de 90% de confiança é de `r prop1`. Já para as _sweat rate_ e _potassium rate_ temos `r prop2` e para _sodium rate_ e _potassium rate_ a proporção é de `r prop3`. 
+
+Diferentemente da percepção com o _scatter plot_ sem a elipse, oberva-se que tanto o par de variáveis $(x_1, x_3)$ quanto $(x_2, x_3)$ possuem 90% dos pontos dentro da elipse de 90% de confiança. Apenas a combinação de variáveis $(x_1, x_2)$ obteve uma proporção abaixo, mas ainda muito próxima. Assim, aliando os resultados do _QQ-Plot_ e do _Scatter plot_, justifica-se a suposição de normalidade multivariada.
+
+### 5.5 Conduzir um teste de hipótese para o vetor de médias $\mu^\intercal = [0.55, 0.60]$ ao nível de significância $\alpha = 0.05$ para os dados do exemplo 5.3. Comparar com o resultado da elipse de 95% de confiança para $\mu$ da Figura 5.1.
+
+Dados do exemplo 5.3: $$ 
+\mathbf{\bar{x}} = \begin{bmatrix}
+                    0.564 \\ 
+                    0.603
+                    \end{bmatrix} 
+\mathbf{S} = \begin{bmatrix}
+              0.0144 & 0.0117 \\
+              0.0117 & 0.0146
+              \end{bmatrix}$$
+$$ n = 42 \\ p = 2$$
+
+Rejeitamos $H_0$ se $$ T^2 > \frac{(n-1)p}{n-p}F_{40,2}(\alpha) $$ onde $$ T^2 = n*(\mathbf{\bar{x}} - \mathbf{\mu})^\intercal S^-1 (\mathbf{\bar{x}} - \mathbf{\mu}) $$
+
+```{r}
+n = 42
+p = 2
+mu = matrix(c(0.550, 0.600))
+x_barra = matrix(c(0.564, 0.603))
+S = matrix(c(0.0144, 0.0117, 0.0117, 0.0146), ncol = 2)
+
+T2_cal<-n*t(x_barra-mu)%*%solve(S)%*%(x_barra-mu)
+T2_cal
+
+alpha = 0.05
+q=qf(1-alpha,p,n-p)*((n-1)*p)/(n-p)
+q
+```
+Temos que $T^2$ = `r T2_cal` < $\frac{(42-1)2}{42-2}F_{40,2}(0.05)$ = `r q`, portanto, não rejeitamos a $H_0$ ao nível de significância de 0.05% para $\mathbf{\mu}^\intercal = [0.55, 0.60]$. 
+
+Na Figura 5.1, na página 223 do livro, observamos que, de fato, $\mathbf{\mu}^\intercal = [0.55, 0.60]$ está dentro da elipse de 95% confiança para a média.
+
+### 5.7 Encontrar os intervalos de confiança simultâneos de 95% $T^2$ para $\mu_1$, $\mu_2$ e $\mu_3$ usando o resultado 5.3. Construir o intervalos de Bonferroni de 95% usando (5-29). Comparar os sets de intervalo. 
+
+Os intervalos de confiança simultâneos seguem a seguinte lógica: 
+
+Dado **a** um vetor não aleatório qualquer e $X_1, X_2, ..., X_n$ uma amostra aleatória de $X \sim N_p(\mathbf{\mu}, \mathbf{\Sigma})$, sabemos que $\mathbf{a^\intercal X} \sim N_p(\mathbf{a^\intercal\mu}, \mathbf{a^\intercal\Sigma a})$. Assim pode-se verificar que $\left[\mathbf{a^\intercal\bar{X}} \pm \sqrt{\frac{p(n-1)}{(n-p)}F_{p,n-p}}\mathbf{a^\intercal}S\mathbf{a}\right]$ contém $\mathbf{a^\intercal\mu}$ com probabilidade $1-\alpha$. Portanto, para determinar a i-ésima média, escolhemos **a** como um vetor de zeros com o valor 1 na i-ésima posição. Assim, temos que: $$IC_{T^2}(\mu_i, 1-\alpha) = \left[\bar{x_i} \pm \sqrt{\frac{p(n-1)}{(n-p)}F_{p,n-p,\alpha}\frac{S_i^2}{n}}\right]$$
+
+Calculando o $IC_{T^2}$ para $\mathbf{\mu_1, \mu_2}$ e $\mathbf{\mu_3}$:
+```{r}
+remove(list = ls())
+
+# Carregando os dados
+data = read.delim("../Wichern_data/T5-1.DAT", header = F, sep = "", stringsAsFactors = F)
+colnames(data) = c("x1", "x2", "x3")
+n = nrow(data)
+p = ncol(data)
+
+# Calculando o quantil da distribuicao F desejado
+alpha = 0.05
+q=qf(1-alpha,p,n-p)*((n-1)*p)/(n-p)
+
+# Calculando media de cada var e matrix de covariancia 
+x_barra = colMeans(data)
+S = cov(data)
+
+# Calculando os intervalos para mu1, mu2 e mu3
+Ls=c()
+Li=c()
+for (i in 1:p) {
+  Ls[i]=(x_barra[i])+sqrt(q*S[i,i]/n)
+  Li[i]=(x_barra[i])-sqrt(q*S[i,i]/n)
+  
+}
+
+Lim=rbind(Ls,Li)
+colnames(Lim)<-c("x1","x2", "x3")
+Lim
+```
+
+Estes resultados, porém, garantem $1-\alpha$ de confiança apenas no caso univariado, ou seja, neste caso, temos 95% de confiança que $\mu_1$ está dentro do intervalo `r Lim[,1]`, $\mu_2$ está em `r Lim[,2]` e `r Lim[,3]` contém $\mu_3$. Porém, não temos o mesmo nível de confiança de que um ponto $(\mu_1, \mu_2, \mu_3)$ esteja no intervalo determinado. Para se obter uma confiança global de $1-\alpha$ utiliza-se a correção de Bonferroni: 
+$$ IC(\mu_i, 1-\alpha) = \left[\bar{x_i} \pm t_{n-1, \frac{\alpha}{2p}}\sqrt{\frac{S_i^2}{n}}\right]$$
+
+```{r}
+Lsb=c()
+Lib=c()
+for (i in 1:p) {
+  Lsb[i]=(x_barra[i])+qt(1-(alpha/(2*p)),n-1)*sqrt(S[i,i]/n)
+  Lib[i]=(x_barra[i])-qt(1-(alpha/(2*p)),n-1)*sqrt(S[i,i]/n)
+  
+}
+
+Limb=rbind(Lsb,Lib)
+colnames(Limb)<-c("x1", "x2", "x3")
+Limb
+```
+
+
