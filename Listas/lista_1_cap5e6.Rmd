@@ -281,7 +281,6 @@ Lib=c()
 for (i in 1:p) {
   Lsb[i]=(x_barra[i])+qt(1-(alpha/(2*p)),n-1)*sqrt(S[i,i]/n)
   Lib[i]=(x_barra[i])-qt(1-(alpha/(2*p)),n-1)*sqrt(S[i,i]/n)
-  
 }
 
 Limb=rbind(Lsb,Lib)
@@ -289,4 +288,5 @@ colnames(Limb)<-c("x1", "x2", "x3")
 Limb
 ```
 
+Observa-se que os limites diminuem o seu volume total, sendo os limites superiores do IC sem correção maiores para todas as variáveis e os limites inferiores menores.
 
