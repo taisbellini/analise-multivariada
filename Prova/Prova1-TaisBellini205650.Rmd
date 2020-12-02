@@ -1,0 +1,146 @@
+---
+title: "EST204 - Estatística Multivariada 2020/3 - Prova 1"
+author: "Tais Bellini - 205650"
+date: "06/12/2020"
+output: pdf_document
+---
+
+## Exercício 1
+
+Dados:
+
+$$ X = \begin{bmatrix}
+        y_1 & y_2 \\
+        1 & 1 \\
+        2 & 2 \\
+        3 & 4 \\
+        4 & 9 \\ 
+        \end{bmatrix}$$
+
+### a) Obtenha os vetores coluna de diferenças. A partir deles, obtenha a matriz S de covariâncias e a matriz R de correlações amostrais.
+
+Para calcular as distâncias, primeiros determinamos o vetor de médias $\mathbf{\bar{x}}^\intercal = [\bar{x_1}, \bar{x_2}]$: 
+$$ \mathbf{\bar{x}} = \begin{bmatrix} 
+                      \frac{1+2+3+4}{4} \\
+                      \frac{1+2+4+9}{4}
+                      \end{bmatrix} = 
+                      \begin{bmatrix} 
+                      \frac{5}{2} \\
+                      4
+                      \end{bmatrix}$$
+Agora, calculamos a diferença entre cada coluna $\mathbf{y_i}$ e $\mathbf{\bar{x}}$, obtendo os vetores de diferenças:
+
+$$\mathbf{d_1} = \mathbf{y_1} - \bar{x_1}\mathbf{1} = \begin{bmatrix} 1 - 2.5 \\ 2 - 2.5 \\ 3-2.5 \\ 4-2.5 \end{bmatrix} = \begin{bmatrix} -1.5 \\ -0.5 \\ 0.5 \\ 1.5 \end{bmatrix} $$
+$$\mathbf{d_2} = \mathbf{y_2} - \bar{x_2}\mathbf{1} = \begin{bmatrix} 1 - 4 \\ 2 - 4 \\ 4-4 \\ 9-4 \end{bmatrix} = \begin{bmatrix} -3 \\ -2 \\ 0 \\ 5 \end{bmatrix} $$
+A partir dos vetores $\mathbf{d_1}$ e $\mathbf{d_2}$, calculamos o seu comprimento ao quadrado: $$L_{d_1}^2 = \mathbf{d_1}^\intercal\mathbf{d_1} = (-1.5)^2 + (-0.5)^2 + 0.5^2 + 1.5^2 = 5$$ $$L_{d_2}^2 = \mathbf{d_2}^\intercal\mathbf{d_2} = (-3)^2 + (-2)^2 + 0^2 + 5^2 = 38$$ $$L_{d_1,d_2}^2 = \mathbf{d_1}^\intercal\mathbf{d_2} = (-1.5)(-3) + (-0.5)(-2) + (0.5)(0) + (1.5)(5) = 13$$
+
+Note que os comprimentos acima nada mais são que a soma dos quadrados da diferença entre cada observação e a média amostral: $$L_{d_i}^2 = \sum_{j=1}^{n}{(x_{j,i}-\bar{x})^2}$$ Ou seja, é a variância $S_{ii}$ sem a divisão por $(n-1)$. Portanto, temos que:
+$$L_{d_i}^2 = \mathbf{d_i}^\intercal\mathbf{d_i} = (n-1)S_{ii}$$ $$L_{d_1,d_2}^2 = \mathbf{d_1}^\intercal\mathbf{d_2} = (n-1)S_{12}$$
+
+Portanto, temos que: $$L_{d_1}^2 = 5 = (4-1)S_{11} \\ S_{11} = \frac{5}{3}$$ $$L_{d_2}^2 = 38 = (4-1)S_{22} \\ S_{22} = \frac{38}{3}$$ $$L_{d_1,d_2}^2 = 13 = (4-1)S_{12} \\ S_{12} = \frac{13}{3}$$
+
+Logo, a matriz de covariâncias $S$ se dá por: 
+$$ S = \begin{bmatrix}
+    \frac{5}{3} & \frac{13}{3} \\
+    \frac{13}{3} & \frac{38}{3}
+    \end{bmatrix} $$
+    
+A partir dos valores da matriz de covariâncias, obtemos facilmente o coeficiente de correlação $r_{12} = \frac{S12}{\sqrt{S11}\sqrt{S22}} = \frac{\frac{13}{3}}{\sqrt{\frac{5}{3}}\sqrt{\frac{38}{3}}} = 0.943$. Logo, a matrix de correlações amostrais $R$ se dá por: 
+$$ R = \begin{bmatrix}
+    1 & 0.943 \\
+    0.943 & 1
+    \end{bmatrix} $$
+
+Conferindo os resultados no R: 
+
+```{r}
+X = cbind(c(1,2,3,4), c(1,2,4,9))
+x_barra = colMeans(X)
+x_barra
+S = cov(X)
+S
+R = cor(X)
+R
+```
+
+
+### b) Calcule a medida de variância generalizada a partir de S e R e mostre a relação entre elas.
+
+A medida de variância generalizada a partir de S é o determinante da matriz de covariância:
+$$ S = \begin{bmatrix}
+    \frac{5}{3} & \frac{13}{3} \\
+    \frac{13}{3} & \frac{38}{3}
+    \end{bmatrix} \\
+    |S| = \left(\frac{5}{3}\right)\left(\frac{38}{3}\right) - \left(\frac{13}{3}\right)\left(\frac{13}{3}\right) = 2.33 $$
+
+    
+Esta medida é proporcional ao quadrado do volume gerado pelos vetores de distância. Por isso, ela pode ser bastante afetada pela variância de uma determinada variável, pois se $S_{ii}$ é muito grande, teremos $d_i$ muito grande e, por consequência, um volume muito grande. 
+
+Para evitar estas distorções, podemos padronizar os vetores de distância, substituindo cada elemento da amostra pelo seu valor padronizado: $x_{ij} = \frac{(x_{ij} - \bar{x_j})}{\sqrt{S_{jj}}}$. A matriz S deste conjunto de dados padronizado é a matriz de correlação R. Portanto, temos que a medida de variância generalizada padronizada é o determinante da matriz R: 
+
+$$ R = \begin{bmatrix}
+    1 & 0.943 \\
+    0.943 & 1
+    \end{bmatrix} $$ 
+    
+$$ |R| =  (1)(1) - (0.943)(0.943) = 0.11 $$
+
+Observe que |S| e |R| estão relacionados da seguinte forma: 
+  $$ |S| = (S_{11}..S_{pp})|R| $$
+
+Podemos entender esta relação a partir da definição da matriz de correlação amostral R: 
+    
+$$ R = \begin{bmatrix}
+\frac{1}{\sqrt{S_{11}}} &  & \\
+&  \ddots & \\
+& & \frac{1}{\sqrt{S_{pp}}}
+\end{bmatrix} S \begin{bmatrix}
+\frac{1}{\sqrt{S_{11}}} &  & \\
+&  \ddots & \\
+& & \frac{1}{\sqrt{S_{pp}}}
+\end{bmatrix} $$
+      
+Sabendo que o determinante de uma multiplicação é o produto do determinante de cada fator $|XY| = |X||Y|$ e que o determinante de uma matriz diagonal é o produto dos elementos da diagonal, temos que: 
+$$ |R| = \left(\frac{1}{\sqrt{S_{11}}...\sqrt{S_{pp}}}\right)|S|\left(\frac{1}{\sqrt{S_{11}}...\sqrt{S_{pp}}}\right) \\
+|S| = (S_{11}...S_{pp})|R|$$
+          
+No caso dos nossos dados, temos que:
+$$ |S| = 2.33 = \left(\frac{5}{3}\right)\left(\frac{38}{3}\right)(0.11) $$
+            
+Validando os resultados no R: 
+            
+```{r}
+VG = det(S)
+VG
+
+VG_p = det(R)
+VG_p
+```
+          
+          
+### c) Calcule a variância total utilizando a matriz S. Comente as diferenças entre as duas medidas.
+
+A medida de variância total é a soma dos elementos da diagonal principal da matriz S: 
+  $$ S_{t} = S_{11}+S_{22} = \left(\frac{5}{3}\right) + \left(\frac{38}{3}\right) = 14.33 $$
+  
+A variância total é a soma do quadrado distâncias $\mathbf{d_1} ... \mathbf{d_{j}}$, ou seja, do comprimento destes vetores, dividida por $(n-1)$, sem levar em consideração a orientação dos vetores. Já variância generalizada considera as covariâncias, que determinam o ângulo entre os vetores e influenciam no volume final.
+
+## Exercicio 2
+
+Dados: 
+  
+$$ X \sim N_3(\mathbf{\mu}, \Sigma) \\ 
+\Sigma = \begin{bmatrix}
+1 & -2 & 0 \\ 
+-2 & 5 & 0 \\
+0 & 0 & 2
+\end{bmatrix} \\
+\mathbf{\mu}^\intercal = [-3, 1, 4] $$ 
+
+### a) Escreva genericamente a forma quadrática $d^2 = (\mathbf{x} - \mathbf{\mu})^\intercal\Sigma^-1(\mathbf{x} - \mathbf{\mu})$ decomposta em função de uma soma envolvendo autovetores e autovalores de $\Sigma$.
+
+$d^2$ pode ser escrito como: 
+$$ d^2 = \sum_{i=1}^{p}{\frac{1}{\lambda_i}[(\mathbf{x}-\mathbf{\mu})^\intercal\mathbf{e_i}]^2}$$
+onde $[\lambda_i, \mathbf{e_i}]$ são os autopares de \Sigma (ou seja, autovalores e autovetores da matriz de covariância \Sigma).
+
+### b) Encontre o comprimento dos eixos do elipsoide formado por $d^2$, com 0.95 de probabilidade (Encontre os autovalores no R usando a função _eigen_).
