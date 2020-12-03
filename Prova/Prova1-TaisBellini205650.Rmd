@@ -70,8 +70,9 @@ A medida de variância generalizada a partir de S é o determinante da matriz de
 $$ S = \begin{bmatrix}
     \frac{5}{3} & \frac{13}{3} \\
     \frac{13}{3} & \frac{38}{3}
-    \end{bmatrix} \\
-    |S| = \left(\frac{5}{3}\right)\left(\frac{38}{3}\right) - \left(\frac{13}{3}\right)\left(\frac{13}{3}\right) = 2.33 $$
+    \end{bmatrix}$$
+    
+$$|S| = \left(\frac{5}{3}\right)\left(\frac{38}{3}\right) - \left(\frac{13}{3}\right)\left(\frac{13}{3}\right) = 2.33 $$
 
     
 Esta medida é proporcional ao quadrado do volume gerado pelos vetores de distância. Por isso, ela pode ser bastante afetada pela variância de uma determinada variável, pois se $S_{ii}$ é muito grande, teremos $d_i$ muito grande e, por consequência, um volume muito grande. 
@@ -196,12 +197,92 @@ $$ A = \begin{bmatrix}
         \end{bmatrix}$$
 
 $$ AX = \begin{bmatrix}
-        \frac{1}{2}X_1 + \frac{1}{2}X_2 + 0X_3 \\
-        2X_1 & -1X_2 & 1X_3 
+        \frac{1}{2}X_1 + \frac{1}{2}X_2 \\
+        2X_1 - 1X_2 + 1X_3 
         \end{bmatrix}$$
 
+Utilizando o *Resultado 4.3* do livro, temos que $AX \sim N_2(A\mathbf{\mu}, A\Sigma A^\intercal)$, onde:
+$$ A\mathbf{\mu} = \begin{bmatrix}
+                    \frac{1}{2} & \frac{1}{2} & 0 \\
+                    2 & -1 & 1 
+                    \end{bmatrix} \begin{bmatrix} -3 \\ 1 \\ 4 \end{bmatrix} = \begin{bmatrix} -1 \\ -3 \end{bmatrix}$$
+
+$$ A \Sigma A^\intercal = \begin{bmatrix}
+                    \frac{1}{2} & \frac{1}{2} & 0 \\
+                    2 & -1 & 1
+                    \end{bmatrix} \begin{bmatrix}
+                                    1 & -2 & 0 \\ 
+                                    -2 & 5 & 0 \\
+                                    0 & 0 & 2
+                                    \end{bmatrix} \begin{bmatrix} 
+                                                  \frac{1}{2} & 2 \\
+                                                  \frac{1}{2} & -1 \\
+                                                            0 & 1 
+                                                  \end{bmatrix} = 
+\begin{bmatrix}
+\frac{1}{2} & - \frac{5}{2} \\
+- \frac{5}{2} & 19 \end{bmatrix} $$
+                    
+```{r}
+A = rbind(c(1/2, 1/2, 0), c(2, -1, 1))
+sigma = cbind(c(1,-2, 0), c(-2, 5, 0), c(0,0,2))
+t(A)
+A%*%sigma%*%t(A)
+mu = as.matrix(c(-3,1,4))
+A%*%mu
+```
 
 
+## Exercício 3
+
+Dados: 
+
+```{r, include = F, echo = F}
+require(GGally)
+require(mvShapiroTest)
+require(carData)
+```
+
+
+```{r}
+#x1: education (Gasto per capita com educação)
+#x2: income (Renda per capita)
+#x3: young (Proporção da pop abaixo de 18 anos)
+#x4: urban (Proporção d pop na área urbana)
+x=carData::Anscombe
+head(x)
+```
+
+
+### Aplique o teste de Shapiro de normalidade univariada e bivariada. Informe o valor p de cada teste e conclua a respeito.
+
+O teste Shapiro de normalidade se baseia na estatística $W$ e testa a hipótese nula de que os dados da amostra provém de uma distribuição normal. 
+Dada um amostra $y_1, ..., y_n$, a estatística $W$ é dada por: 
+$$ W = \frac{b^2}{s^2} $$
+onde, 
+$$ s^2 = \sum_{i=1}^{n}(y_i - \bar{y})^2 $$
+Se $n$ é par, $n = 2k$ e $b$ é calculado por:
+$$ b = \sum_{i=1}^{k}a_{n-i+1}(y{n-i+1} - y_i)$$
+Se $n$ é ímpar, $n=2k+1$ e $b$ se calcula da seguinte forma:
+$$ b = a_n(y_n-y_1) + ... + a_{k+2}(y_{k+2} - y_k) $$
+Os valores de $a$ são tabelados e dependem de $n$. 
+
+Para executar o teste, podemos utilizar uma função pronta do R e analisar o p-valor resultante. 
+
+No caso do teste univariado, vamos executar o teste Shapiro para cada variável separadamente e avaliar a sua normalidade através dos p-valores encontrados:
+
+```{r}
+W=rep(0,ncol(x))
+
+for(i in 1:4){
+W[i]=shapiro.test(x[,i])$p.value }
+W = t(as.matrix(W))
+colnames(W) = c("x1", "x2", "x3", "x4")
+rownames(W) = c("p-value")
+W
+```
+
+Observa-se pelos resultados que não rejeitamos a hipótese nula de que as variáveis $x_2$ e $x_4$ provém de uma distribuição normal, com nível de significância $\alpha = 0.01$ $\alpha = 0.05$ e $\alpha = 0.10$. Já para a variável $x1$, rejeitamos para $\alpha = 0.05$ e $\alpha = 0.10$ e não rejeitamos para $\alpha = 0.01$. Por fim, não há evidência de que os dados coletados da variável $x_3$ venham de uma distribuição normal.
 
 
 
