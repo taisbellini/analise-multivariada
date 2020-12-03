@@ -134,13 +134,74 @@ $$ X \sim N_3(\mathbf{\mu}, \Sigma) \\
 1 & -2 & 0 \\ 
 -2 & 5 & 0 \\
 0 & 0 & 2
-\end{bmatrix} \\
-\mathbf{\mu}^\intercal = [-3, 1, 4] $$ 
+\end{bmatrix} \\ \mathbf{\mu}^\intercal = [-3, 1, 4] $$ 
 
-### a) Escreva genericamente a forma quadrática $d^2 = (\mathbf{x} - \mathbf{\mu})^\intercal\Sigma^-1(\mathbf{x} - \mathbf{\mu})$ decomposta em função de uma soma envolvendo autovetores e autovalores de $\Sigma$.
+### a) Escreva genericamente a forma quadrática $d^2 = (\mathbf{x} - x\mathbf{\mu})^\intercal\Sigma^{-1}(\mathbf{x} - \mathbf{\mu})$ decomposta em função de uma soma envolvendo autovetores e autovalores de $\Sigma$.
 
 $d^2$ pode ser escrito como: 
 $$ d^2 = \sum_{i=1}^{p}{\frac{1}{\lambda_i}[(\mathbf{x}-\mathbf{\mu})^\intercal\mathbf{e_i}]^2}$$
-onde $[\lambda_i, \mathbf{e_i}]$ são os autopares de \Sigma (ou seja, autovalores e autovetores da matriz de covariância \Sigma).
+onde $[\lambda_i, \mathbf{e_i}]$ são os autopares de $\Sigma$ (ou seja, autovalores e autovetores da matriz de covariância $\Sigma$).
 
 ### b) Encontre o comprimento dos eixos do elipsoide formado por $d^2$, com 0.95 de probabilidade (Encontre os autovalores no R usando a função _eigen_).
+
+Primeiro, vamos determinar os autovalores e autovetores: 
+
+```{r}
+sigma = cbind(c(1,-2,0), c(-2,5,0), c(0,0,2))
+mu = as.matrix(c(-3, 1, 4))
+
+eig = eigen(sigma)
+eig
+```
+
+Para definir o contorno da elipsoide de 95% de confiança, vamos utilizar o fato de que $(x-\mathbf{\mu})^\intercal\Sigma^{-1}(x-\mathbf{\mu}) \sim \chi_p^2$. Queremos uma elipse com área que contemple 95% dos nossos dados que possuem distribuição Normal de três variáveis, portanto, 
+$(x-\mathbf{\mu})^\intercal\Sigma^{-1}(x-\mathbf{\mu}) = c^2$ onde $c^2$ é o quantil da distribuição Qui-Quadrado tal que $P(\chi_3^2 \leq c^2) = 0.95$.
+
+Encontrando $c^2$ e calculando o comprimento dos eixos partindo do centro ($\mathbf{\mu}$):
+```{r}
+c2 = qchisq(0.95, 3)
+c2
+
+eixo1 = sqrt(c2)*sqrt(eig$values[1])
+eixo1
+eixo2 = sqrt(c2)*sqrt(eig$values[2])
+eixo2
+eixo3 = sqrt(c2)*sqrt(eig$values[3])
+eixo3
+```
+
+
+Assim, temos que o comprimento dos eixos a partir do centro ($\mathbf{\mu}$) se dão por: 
+$$ eixo_1 = c\sqrt{\lambda_1}\mathbf{e_1} = \sqrt{`r c2`}\sqrt{`r eig$values[1]`}[`r eig$vectors[,1]`] = `r eixo1`$$
+$$ eixo_2 = c\sqrt{\lambda_2}\mathbf{e_2} = \sqrt{`r c2`}\sqrt{`r eig$values[2]`}[`r eig$vectors[,2]`] = `r eixo2`$$
+$$ eixo_3 = c\sqrt{\lambda_3}\mathbf{e_3} = \sqrt{`r c2`}\sqrt{`r eig$values[3]`}[`r eig$vectors[,3]`] = `r eixo3`$$
+
+A orientação se dá pelos vetores: $$e_1^\intercal = [`r eig$vectors[,1]`] $$ $$ e_2^\intercal = [`r eig$vectors[,2]`]$$ $$ e_3^\intercal = [`r eig$vectors[,3]`]$$
+
+### c) Encontre a distribuição do vetor aleatório $\mathbf{Y}^\intercal = (Y_1, Y_2)$, onde $Y_1 = \frac{(X_1+X_2)}{2}$ e $Y_2 = 2X_1-X_2+X_3$
+
+Sabemos que, se $X\sim N(\mathbf{\mu}, \Sigma)$,  combinações lineares dos componentes de X possuem distribuição normal e que os subsets de componentes de X também são normalmente distribuídos. 
+Podemos reescrever $\mathbf{Y}$ como uma combinação $AX$:
+
+$$\mathbf{Y} = \begin{bmatrix}
+                Y_1 \\ Y_2 
+                \end{bmatrix} = \begin{bmatrix}
+                                \frac{(X_1+X_2)}{2} \\ 
+                                2X_1-X_2+X_3
+                                \end{bmatrix}$$
+                                
+$$ A = \begin{bmatrix}
+        \frac{1}{2} & \frac{1}{2} & 0 \\
+        2 & -1 & 1 
+        \end{bmatrix}$$
+
+$$ AX = \begin{bmatrix}
+        \frac{1}{2}X_1 + \frac{1}{2}X_2 + 0X_3 \\
+        2X_1 & -1X_2 & 1X_3 
+        \end{bmatrix}$$
+
+
+
+
+
+
