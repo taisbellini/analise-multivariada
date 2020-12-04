@@ -514,7 +514,7 @@ No gráfico acima, temos vermelho para a matéria Matemática, verde para Físic
 
 Para determinar se o programa de reforço teve influência nas notas, precisamos testar $H_0 : \mathbf{\mu_a} = \mathbf{\mu_d}$. Ou seja, partimos da hipótese nula de a média das notas antes é igual a média depois do reforço e, portanto, ele não teve influência nas notas. Outra forma de escrever $H_0: \mathbf{\mu_a} - \mathbf{\mu_d} = 0$
 
-Para isto, vamos calcular a distância entre as notas antes e depois do reforço para cada matéria e aplicar o teste com a estatística $T^2$:
+Como verificamos que há evidências de que os dados são de uma população normal e desconhecemos $\Sigma$, vamos calcular a distância entre as notas antes e depois do reforço para cada matéria e aplicar o teste com a estatística $T^2$:
 ```{r}
 d_barra = colMeans(d)
 S = cov(d)
@@ -566,3 +566,101 @@ Limb
 ```
 
 Observa-se que, em ambos os intervalos, apenas a matéria de Química não engloba o zero, ou seja, o reforço só foi influente nesta matéria. Isto também pode ser observado no Gráfico 4.1, onde observamos que a média dos dados da matéria de Química se moveu mais significativamente em relação as outras.  
+
+## Exercício 5
+
+Dados: 
+
+```{r}
+x=mtcars
+
+#Fator = forma do motor
+#vs=0 V-shaped
+#vs=1 Straight
+
+# quereos as variaveis mpg, hp, wt, qsec
+X=x[,c(1,4,6,7,8)]
+head(X)
+```
+
+
+### a) Aplique o teste de Shapiro de normalidade multivariada dentro de cada grupo (motores em V e convencionais). Informe o valor p de cada teste e conclua a respeito. Em caso de não normalidade, verifique se os dados transformados (via logaritmo natural) aderem a hipótese de normalidade. Neste caso realizar as análises subsequentes utilizando os dados transformados.
+
+Separando os dados por fator:
+```{r}
+v_shaped = X[X$vs == 0,]
+straight = X[X$vs == 1,]
+```
+
+Testando normalidade multivariada através do teste Shapiro multivariado:
+```{r}
+v_shaped = as.matrix(v_shaped)
+straight = as.matrix(straight)
+shap_v = mvShapiro.Test(v_shaped[,-5])
+shap_s = mvShapiro.Test(straight[,-5])
+
+resultados = t(as.matrix(c(shap_v$p.value, shap_s$p.value)))
+colnames(resultados) = c("V-shaped", "Straight")
+rownames(resultados) = c("p-value")
+resultados
+```
+
+Não rejeitamos a hipótese de normalidade para o grupo _V-shaped_, mas rejeitamos para o grupo _Straight_.
+
+Transformando os dados do grupo _Straight_:
+
+```{r}
+straight_log = apply(straight[,-5], 2, log)
+straight_log = cbind(straight_log, rep(nrow(straight_log), 1))
+
+shap_slog = mvShapiro.Test(straight_log[,-5])
+shap_slog
+```
+
+Observa-se que, com a transformação realizada no grupo _Straight_, passamos a aceitar a hipótese de normalidade avaliando com nível de significância $\alpha = 0.1$, $\alpha = 0.5$ e $\alpha = 0.01$.
+
+Para manter a consistência dos dados, vamos aplicar o log no grupo _V-shaped_ também:
+
+```{r}
+v_shaped_log = apply(v_shaped[,-5], 2, log)
+v_shaped_log = cbind(v_shaped_log, rep(nrow(v_shaped_log), 0))
+
+shap_vlog = mvShapiro.Test(v_shaped_log[,-5])
+shap_vlog
+```
+
+Com a transformação, o grupo _V_shaped_ também adere à hipoótese de normalidade. Portanto, para os próximos cálculos, utilizaremos os dados transformados. 
+
+Analisando no caso univariado: 
+
+```{r}
+W=rep(0,ncol(v_shaped_log[,-5]))
+
+for(i in 1:ncol(v_shaped_log[,-5])){
+  W[i]=shapiro.test(v_shaped_log[,i])$p.value
+}
+
+W = t(as.matrix(W))
+colnames(W) = c("mpg", "hp", "wt", "qsec")
+rownames(W) = c("p-value: v-shaped")
+
+Ws=rep(0,ncol(straight[,-5]))
+
+for(i in 1:ncol(straight[,-5])){
+  Ws[i]=shapiro.test(straight[,i])$p.value
+}
+
+Ws = t(as.matrix(Ws))
+colnames(Ws) = c("mpg", "hp", "wt", "qsec")
+rownames(Ws) = c("p-value: straight")
+
+p = rbind(W, Ws)
+p
+
+```
+
+Com nível de significância $\alpha = 0.01$, aceitamos a hipótese de normalidade para todas as variáveis transformadas.
+
+
+#### b) Existe a 5% diferença significativa nas variáveis analisadas entre os 2 tipos de motores? Informe o valor da estatística de teste, o valor cr ́ıtico e conclua a respeito.
+
