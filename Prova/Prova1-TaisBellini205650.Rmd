@@ -504,8 +504,7 @@ x_f = rbind(mat_f, fis_f, qui_f)
 x_f = as.data.frame(x_f)
 colnames(x_f) = c("Antes", "Depois", "Materia")
 
-gg = ggpairs(x_f[,-3], mapping=aes(colour=as.factor(x_f[,3])), upper=list(combo= 'blank', continuous='blank'), title = "Gráfico 1") 
-gg + theme(legend.position = "right")
+ggpairs(x_f[,-3], mapping=aes(colour=as.factor(x_f[,3])), upper=list(combo= 'blank', continuous='blank'), title = "Gráfico 4.1") 
 
 ```
 
@@ -566,4 +565,4 @@ colnames(Limb) = c("Mat", "Fis", "Qui")
 Limb
 ```
 
-Observa-se que, em ambos os intervalos, apenas a matéria de Química não engloba o zero, ou seja, o reforço só foi influente nesta matéria. Isto também pode ser observado no Gráfico 1, onde observamos que a média dos dados da matéria de Química se moveu mais significativamente em relação as outras.  
+Observa-se que, em ambos os intervalos, apenas a matéria de Química não engloba o zero, ou seja, o reforço só foi influente nesta matéria. Isto também pode ser observado no Gráfico 4.1, onde observamos que a média dos dados da matéria de Química se moveu mais significativamente em relação as outras.  
