@@ -662,5 +662,92 @@ p
 Com nível de significância $\alpha = 0.01$, aceitamos a hipótese de normalidade para todas as variáveis transformadas.
 
 
-#### b) Existe a 5% diferença significativa nas variáveis analisadas entre os 2 tipos de motores? Informe o valor da estatística de teste, o valor cr ́ıtico e conclua a respeito.
+#### b) Existe a 5% diferença significativa nas variáveis analisadas entre os 2 tipos de motores? Informe o valor da estatística de teste, o valor crítico e conclua a respeito.
+
+Vamos testar $H_0: \mathbf{\mu_v} - \mathbf{\mu_s} = 0$, onde $\mathbf{\mu_v} = (\mu_{mpg}, \mu_{hp}, \mu_{wt}, \mu_{qsec})$ para os motores _V-Shaped_ e $\mathbf{\mu_s} = (\mu_{mpg}, \mu_{hp}, \mu_{wt}, \mu_{qsec})$ para os motores _Straight_.
+
+Já confirmamos no exercício 5-a que podemos assumir normalidade dos dados quando aplicado o logaritmo natural. Portanto, podemos utilizar o teste utilizando a distribuição $F$, assumindo que $\Sigma_v = \Sigma_s = \Sigma$ . Vamos nos valer do fato de que $\bar{X_v} - \bar{X_s} \sim N_4(\mathbf{\mu_v}-\mathbf{\mu_s}, \Sigma(\frac{1}{n_v}+\frac{1}{n_s}))$.
+
+Neste caso, não conhecemos $\Sigma$ e sabemos que um bom estimador para a variância dos dados se dá por:
+$$ S_{pool} = \frac{1}{n_v+n_s-2}\left[(n_v-1)S_v + (n_s-1)S_s\right] $$
+Sabemos, então, que $(n_k-1)S_k^2 \sim W_p(n_k-1, \Sigma)$, para $k = v,s$. A partir deste resultado, temos que 
+$$ (n_v+n_s-2)S_{pool}^2 \sim W_4(n_v+n_s-2,\Sigma)$$. Com isto, temos que, sob $H_0$, $$T^2 = (\bar{X_v}-\bar{X_s})^\intercal\left(\left(\frac{1}{n_v}+\frac{1}{n_s}\right)S_{pool}\right)^{-1}(\bar{X_v}-\bar{X_s}) \sim \frac{(n_v+n_s-2)4}{n_v+n_s-4-1}F_{(4, n_v+n_s-4-1)}$$
+
+Dito isto, rejeitamos $H_0$ a um nível de significância $\alpha = 0.05$ se $T_{cal}^2 \geq \frac{(n_v+n_s-2)4}{n_v+n_s-4-1}qF_{(4, n_v+n_s-4-1, \alpha=0.05)}$.
+
+Vamos primeiro analisar os dados visualmente: 
+```{r}
+ggpairs(X[,-5], mapping=aes(colour=as.factor(X[,5])), upper=list(combo= 'blank', continuous='blank'), title = "Gráfico 5.1")
+```
+
+Implementando o teste de hopótese:
+```{r}
+xv_barra = colMeans(v_shaped_log)
+Sv = cov(v_shaped_log)
+nv = nrow(v_shaped_log)
+
+xs_barra = colMeans(straight_log)
+Ss = cov(straight_log)
+ns = nrow(straight_log)
+n = nv+ns
+
+S_pool = ((nv-1)*Sv+(ns-1)*Ss)/(n-2)
+
+Sco = ((1/nv)+(1/ns))*S_pool
+
+alpha=0.05
+p=ncol(v_shaped_log)
+mu=c(0,0,0,0)
+
+T2_cal<-mahalanobis(xv_barra-xs_barra,mu,Sco,inverted = FALSE)
+T2_cal
+
+q=qf(1-alpha,p,nv+ns-p-1)*((nv+ns-2)*p)/(nv+ns-p-1)
+q
+
+```
+
+Como $T^2$ = `r T2_cal` > q = `r q`, concluímos por rejeitar $H_0: \mathbf{\mu_v} - \mathbf{\mu_s} = 0$ com nível de significância de 5%, indicando que há evidência de diferença entre os carros com motores _V-Shaped_ e _Straight_. Este resultado pode ser observado no Gráfico 5.1, onde nota-se uma separabilidade dos dados azuis e vermelhos.
+
+### c) Construa os intervalos T e bonferroni e conclua a respeito.
+
+Para construir os intervalos de confiança T, temos que, para cada variável $i = mpg, hp, wt, qsec$:
+$$ IC_{T^2}(\mu_{i,v}-\mu_{i,s}, 1-\alpha) = \left[(\bar{x}_{i,v}-\bar{x}_{i,s})] \pm \sqrt{\frac{4(n_v+n_s-2)}{n_v+n_s-4-1}F_{4,n_v+n_s-4-1,\alpha=0.05}\left(\frac{1}{n_v}+\frac{1}{n_s}\right)S_{i,pool}^2}\right]$$
+Para o IC de Bonferroni, temos, para cada variável $i = mpg, hp, wt, qsec$:
+
+$$ IC_(\mu_{i,v}-\mu_{i,s}, 1-\alpha) = \left[(\bar{x}_{i,v}-\bar{x}_{i,s})] \pm t_{n_v+n_s-2,\frac{\alpha}{2*4}} \sqrt{\left(\frac{1}{n_v}+\frac{1}{n_s}\right)S_{i,pool}^2}\right]$$
+
+```{r}
+##Intervalos Simulataneos
+Ls=c()
+Li=c()
+for (i in 1:p) {
+  Ls[i]=(xv_barra[i]-xs_barra[i])+sqrt(qf(1-alpha,p,n-p-1)*(((n-2)*p)/((n-p-1)))*Sco[i,i])
+  Li[i]=(xv_barra[i]-xs_barra[i])-sqrt(qf(1-alpha,p,n-p-1)*(((n-2)*p)/((n-p-1)))*Sco[i,i])
+  
+}
+
+Lim=rbind(Ls,Li)
+colnames(Lim)<-colnames(X[-5])
+paste("Intervalos T")
+Lim
+
+
+############univariados Bonferroni
+Lsb=c()
+Lib=c()
+for (i in 1:p) {
+  Lsb[i]=(xv_barra[i]-xs_barra[i])+qt(1-(alpha/(2*p)),n-2)*sqrt(Sco[i,i])
+  Lib[i]=(xv_barra[i]-xs_barra[i])-qt(1-(alpha/(2*p)),n-2)*sqrt(Sco[i,i])
+}
+
+Limb=rbind(Lsb,Lib)
+colnames(Limb)<-colnames(X[-5])
+paste("Intervalos Bonferroni")
+Limb
+```
+
+Observa-se pelos intervalos que nenhum contempla o zero, ou seja, há diferença entre as médias de todas as variáveis para os motores _V-Shaped_ e _Straight_.
+
+
 
