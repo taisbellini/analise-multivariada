@@ -130,12 +130,13 @@ A variância total é a soma do quadrado distâncias $\mathbf{d_1} ... \mathbf{d
 
 Dados: 
   
-$$ X \sim N_3(\mathbf{\mu}, \Sigma) \\ 
-\Sigma = \begin{bmatrix}
+$$ X \sim N_3(\mathbf{\mu}, \Sigma)$$ 
+$$\Sigma = \begin{bmatrix}
 1 & -2 & 0 \\ 
 -2 & 5 & 0 \\
 0 & 0 & 2
-\end{bmatrix} \\ \mathbf{\mu}^\intercal = [-3, 1, 4] $$ 
+\end{bmatrix}$$
+$$\mathbf{\mu}^\intercal = [-3, 1, 4] $$ 
 
 ### a) Escreva genericamente a forma quadrática $d^2 = (\mathbf{x} - x\mathbf{\mu})^\intercal\Sigma^{-1}(\mathbf{x} - \mathbf{\mu})$ decomposta em função de uma soma envolvendo autovetores e autovalores de $\Sigma$.
 
@@ -222,7 +223,9 @@ $$ A \Sigma A^\intercal = \begin{bmatrix}
 \begin{bmatrix}
 \frac{1}{2} & - \frac{5}{2} \\
 - \frac{5}{2} & 19 \end{bmatrix} $$
-                    
+
+Conferindo os resultados no R: 
+
 ```{r}
 A = rbind(c(1/2, 1/2, 0), c(2, -1, 1))
 sigma = cbind(c(1,-2, 0), c(-2, 5, 0), c(0,0,2))
@@ -331,7 +334,7 @@ rownames(resultados) = c("(x1,x2)","(x1,x3)", "(x1,x4)", "(x2,x3)", "(x2,x4)", "
 resultados
 ```
 
-Observa-se, pelos p-valores encontrados, que, de fato, há evidência de que o par $(x_2, x_4)$ seja proveniente de uma distribuição normal se avaliados com os níveis de significância $\alpha = 0.1$, $\alpha = 0.5$ e $\alpha = 0.01$. Já para o par $(x_1, x_2)$ também podemos aceitar a hipótese nula de que venha de uma distribuição normal, com significância $\alpha = 0.05$ e $\alpha = 0.05$. Não rejeitamos a hipótese de normalidade para o par $(x_1, x_3)$ com nível de significância $\alpha = 0.01$ e rejeitamos a hipótese para os demais casos.
+Observa-se, pelos p-valores encontrados, que, de fato, há evidência de que o par $(x_2, x_4)$ seja proveniente de uma distribuição normal se avaliados com os níveis de significância $\alpha = 0.1$, $\alpha = 0.5$ e $\alpha = 0.01$. Já para o par $(x_1, x_2)$, também podemos aceitar a hipótese nula de que venha de uma distribuição normal, com significância $\alpha = 0.05$ e $\alpha = 0.05$. Não rejeitamos a hipótese de normalidade para o par $(x_1, x_3)$ com nível de significância $\alpha = 0.01$ e rejeitamos a hipótese para os demais casos.
 
 Podemos ainda observar o caso multivariado: 
 
@@ -351,8 +354,7 @@ x_barra = colMeans(x)
 S=cov(x)
 n = nrow(x)
 p = ncol(x)
-n
-p
+alpha = 0.05
 mu = c(210, 3225, 360, 665)
 
 T2_cal<-n*mahalanobis(x_barra, mu, S, inverted = FALSE)
@@ -395,7 +397,7 @@ colnames(Lim)<-c("x1","x2", "x3", "x4")
 Lim
 ```
 
-Estes resultados, porém, garantem $1-\alpha$ de confiança apenas no caso univariado, ou seja, neste caso, temos 95% de confiança que $\mu_1$ está dentro do intervalo `r Lim[,1]`, $\mu_2$ está em `r Lim[,2]`, `r Lim[,3]` contém $\mu_3$ e `r Lim[,4]` contempla $\mu_4$. Porém, não temos o mesmo nível de confiança de que um ponto $(\mu_1, \mu_2, \mu_3, \mu_4)$ esteja nos intervalos determinados. Para se obter uma confiança global de $1-\alpha$ utiliza-se a correção de Bonferroni: 
+Estes resultados, porém, garantem $1-\alpha$ de confiança apenas no caso univariado, ou seja, neste caso, temos 95% de confiança que $\mu_1$ está dentro do intervalo `r Lim[,1]`, $\mu_2$ está em [`r Lim[,2]`], [`r Lim[,3]`] contém $\mu_3$ e [`r Lim[,4]`] contempla $\mu_4$. Porém, não temos o mesmo nível de confiança de que um ponto $(\mu_1, \mu_2, \mu_3, \mu_4)$ esteja nos intervalos determinados. Para se obter uma confiança global de $1-\alpha$ utiliza-se a correção de Bonferroni: 
 $$ IC(\mu_i, 1-\alpha) = \left[\bar{x_i} \pm t_{n-1, \frac{\alpha}{2p}}\sqrt{\frac{S_i^2}{n}}\right]$$
 
 ```{r}
@@ -413,4 +415,155 @@ Limb
 
 Observa-se que os limites diminuem o seu volume total, sendo os limites superiores do IC sem correção maiores para todas as variáveis e os limites inferiores menores. Nas duas medidas de intervalo de confiança, nota-se rejeitamos $H_0$ pois  $\mu_1 = 210$ está fora dos intervalos. 
 
+## Exercício 4 - Um programa de reforço de estudos foi avaliado a partir de uma amstra de 15 estudantes. Cada um deles realizou provas com conteúdos de matemática, física e química antes e depois de serem submetidos ao programa de reforço.
 
+### a) Aplique o teste de Shapiro de normalidade multivariada. Informe o valor p de cada teste e conclua a respeito.
+
+Dados: 
+
+```{r}
+mat_a=c(6.62, 5.53, 6.27, 5.49, 5.26, 6.46, 2.64, 3.89, 6.23, 4.36,
+        6.08, 5.70, 6.91, 4.70, 5.14)
+fis_a=c(6.08, 6.82, 5.68, 4.80, 6.62, 5.86, 7.26, 4.49, 6.44, 6.32,
+        6.28, 7.07, 5.58, 5.76, 6.22)
+qui_a=c(5.43, 6.39, 5.41, 6.10, 4.71, 5.22, 5.63, 7.27, 5.92, 3.34,
+        6.96, 7.77, 4.37, 4.80, 6.33)
+
+mat_d=c(8.00, 6.87, 6.12, 5.49, 5.74, 5.94, 4.87, 7.92, 6.79, 9.59,
+        5.49, 8.34, 8.29, 6.77, 7.66)
+fis_d=c(6.18, 7.82, 4.68, 4.00, 3.62, 5.86, 8.26, 4.30, 6.44, 8.32,
+        6.28, 7.07, 5.58, 6.76, 6.00)
+qui_d=c(8.06, 8.43, 6.39, 7.14, 6.78, 6.83, 7.93, 7.31, 9.11, 7.62,
+        7.72, 8.32, 9.12, 7.18, 8.98)
+
+x=cbind(mat_a,fis_a,qui_a,mat_d,fis_d,qui_d)
+
+
+d_mat=mat_d-mat_a
+d_fis=fis_d-fis_a
+d_qui=qui_d-qui_a
+d<-cbind(d_mat,d_fis,d_qui)
+
+head(x)
+```
+
+
+Testando normalidade multivariada através do teste Shapiro multivariado:
+
+```{r}
+shap = mvShapiro.Test(x)
+shap
+```
+
+Observamos que o p-valor é bem alto: `r  shap$p.value`, portanto, aceitamos a hipótese $H_0$: de que  $\mathbf{X_1, ...,X_n}$ provém de uma população com distribuição normal. 
+
+Vamos avaliar caso multivariado separado por matéria:
+```{r}
+mat = cbind(mat_a, mat_d)
+fis = cbind(fis_a, fis_d)
+qui = cbind(qui_a, qui_d)
+
+shap_mat = mvShapiro.Test(mat)
+shap_fis = mvShapiro.Test(fis)
+shap_qui = mvShapiro.Test(qui)
+
+p_vals = t(as.matrix(c(shap_mat$p.value, shap_fis$p.value, shap_qui$p.value)))
+colnames(p_vals) = c("mat", "fis", "qui")
+rownames(W) = c("p-value")
+p_vals
+
+```
+
+Observamos que, novamente, os p-valores para cada par de variáveis referentes a cada matéria são altos, confirmando a hipótese de normalidade. 
+
+Vamos avaliar o caso univariado: 
+
+```{r}
+W=rep(0,ncol(x))
+
+for(i in 1:ncol(x)){
+  W[i]=shapiro.test(x[,i])$p.value
+}
+
+W = t(as.matrix(W))
+colnames(W) = c("mat_a", "fis_a", "qui_a", "mat_d", "fis_d", "qui_d")
+rownames(W) = c("p-value")
+W
+```
+
+Por fim, temos evidência de que cada variável provém de uma distribuição normal.
+
+Vamos ajustar o banco de forma que a matéria seja um fator e possamos observar os dados: 
+
+```{r}
+mat_f = cbind(mat_a, mat_d, rep(1, length(mat_a)))
+fis_f = cbind(fis_a, fis_d, rep(2, length(fis_a)))
+qui_f = cbind(qui_a, qui_d, rep(3, length(qui_a)))
+
+x_f = rbind(mat_f, fis_f, qui_f)
+x_f = as.data.frame(x_f)
+colnames(x_f) = c("Antes", "Depois", "Materia")
+
+gg = ggpairs(x_f[,-3], mapping=aes(colour=as.factor(x_f[,3])), upper=list(combo= 'blank', continuous='blank'), title = "Gráfico 1") 
+gg + theme(legend.position = "right")
+
+```
+
+No gráfico acima, temos vermelho para a matéria Matemática, verde para Física e azul para Química.
+
+### b) O programa de reforço teve influência nas notas? Teste com 1% de significância Informe o valor da estatística de teste, o valor crítico e conclua a respeito.
+
+Para determinar se o programa de reforço teve influência nas notas, precisamos testar $H_0 : \mathbf{\mu_a} = \mathbf{\mu_d}$. Ou seja, partimos da hipótese nula de a média das notas antes é igual a média depois do reforço e, portanto, ele não teve influência nas notas. Outra forma de escrever $H_0: \mathbf{\mu_a} - \mathbf{\mu_d} = 0$
+
+Para isto, vamos calcular a distância entre as notas antes e depois do reforço para cada matéria e aplicar o teste com a estatística $T^2$:
+```{r}
+d_barra = colMeans(d)
+S = cov(d)
+mu=c(0,0,0)
+n=nrow(d)
+p=ncol(d)
+alpha = 0.01
+
+T2_cal<-n*mahalanobis(d_barra, mu, S, inverted = FALSE)
+T2_cal
+
+q=((n-1)*p)/(n-p)*qf(1-alpha,p,n-p)
+q
+```
+Como $T^2$ = `r T2_cal` > q = `r q`, concluímos por rejeitar $H_0: \mathbf{\mu_a} - \mathbf{\mu_d} = 0$ com nível de significância de 1%, indicando que há evidência de que o reforço influenciou as notas dos alunos. 
+
+### c) Construa os intervalos T e bonferroni e conclua a respeito.
+
+o cálculo para os intervalos é muito similar ao da questão 3. Neste caso, em que estamos avaliando a diferença entre médias, utilizamos a diferença ($\mathbf{\bar{x_a}} - \mathbf{\bar{x_d}}$) no lugar de $\mathbf{\bar{x}}$:
+
+
+Intervalo T: 
+```{r}
+Ls=c()
+Li=c()
+for (i in 1:p) {
+  Ls[i]=(d_barra[i])+sqrt(q*S[i,i]/n)
+  Li[i]=(d_barra[i])-sqrt(q*S[i,i]/n)
+  
+}
+
+Lim=rbind(Ls,Li)
+colnames(Lim) = c("Mat", "Fis", "Qui")
+Lim
+```
+
+Bonferroni:
+```{r} 
+Lsb=c()
+Lib=c()
+for (i in 1:p) {
+  Lsb[i]=(d_barra[i])+qt(1-(alpha/(2*p)),n-1)*sqrt(S[i,i]/n)
+  Lib[i]=(d_barra[i])-qt(1-(alpha/(2*p)),n-1)*sqrt(S[i,i]/n)
+  
+}
+Limb=rbind(Lsb,Lib)
+colnames(Limb) = c("Mat", "Fis", "Qui")
+Limb
+```
+
+Observa-se que, em ambos os intervalos, apenas a matéria de Química não engloba o zero, ou seja, o reforço só foi influente nesta matéria. Isto também pode ser observado no Gráfico 1, onde observamos que a média dos dados da matéria de Química se moveu mais significativamente em relação as outras.  
