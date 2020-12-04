@@ -240,7 +240,10 @@ Dados:
 ```{r, include = F, echo = F}
 require(GGally)
 require(mvShapiroTest)
+require(car)
 require(carData)
+require(ggplot2)
+require(gtools)
 ```
 
 
@@ -254,7 +257,7 @@ head(x)
 ```
 
 
-### Aplique o teste de Shapiro de normalidade univariada e bivariada. Informe o valor p de cada teste e conclua a respeito.
+### a) Aplique o teste de Shapiro de normalidade univariada e bivariada. Informe o valor p de cada teste e conclua a respeito.
 
 O teste Shapiro de normalidade se baseia na estatística $W$ e testa a hipótese nula de que os dados da amostra provém de uma distribuição normal. 
 Dada um amostra $y_1, ..., y_n$, a estatística $W$ é dada por: 
@@ -267,6 +270,8 @@ Se $n$ é ímpar, $n=2k+1$ e $b$ se calcula da seguinte forma:
 $$ b = a_n(y_n-y_1) + ... + a_{k+2}(y_{k+2} - y_k) $$
 Os valores de $a$ são tabelados e dependem de $n$. 
 
+#### Univariado
+
 Para executar o teste, podemos utilizar uma função pronta do R e analisar o p-valor resultante. 
 
 No caso do teste univariado, vamos executar o teste Shapiro para cada variável separadamente e avaliar a sua normalidade através dos p-valores encontrados:
@@ -275,14 +280,137 @@ No caso do teste univariado, vamos executar o teste Shapiro para cada variável 
 W=rep(0,ncol(x))
 
 for(i in 1:4){
-W[i]=shapiro.test(x[,i])$p.value }
+  W[i]=shapiro.test(x[,i])$p.value
+}
+
 W = t(as.matrix(W))
 colnames(W) = c("x1", "x2", "x3", "x4")
 rownames(W) = c("p-value")
 W
 ```
 
-Observa-se pelos resultados que não rejeitamos a hipótese nula de que as variáveis $x_2$ e $x_4$ provém de uma distribuição normal, com nível de significância $\alpha = 0.01$ $\alpha = 0.05$ e $\alpha = 0.10$. Já para a variável $x1$, rejeitamos para $\alpha = 0.05$ e $\alpha = 0.10$ e não rejeitamos para $\alpha = 0.01$. Por fim, não há evidência de que os dados coletados da variável $x_3$ venham de uma distribuição normal.
+Observa-se pelos resultados que não rejeitamos a hipótese nula de que as variáveis $x_2$ e $x_4$ provém de uma distribuição normal, se avaliados nos níveis de significância $\alpha = 0.01$ $\alpha = 0.05$ e $\alpha = 0.10$. Já para a variável $x1$, rejeitamos para a avaliacão de $\alpha = 0.05$ e $\alpha = 0.10$ e não rejeitamos para $\alpha = 0.01$. Por fim, não há evidência de que os dados coletados da variável $x_3$ venham de uma distribuição normal.
 
+Vamos analisar graficamente os resultados acima: 
+
+```{r}
+par(mfrow=c(2,2))
+for( i in 1:ncol(x)){
+  qqPlot(x[,i], dist="norm", main=paste("x",i), ylab=paste("empirical"))
+}
+```
+
+Observa-se que, de fato, $x_3$ possui diversos pontos fora da banda de confiança no _Q-Q Plot_ e $x_1$, apesar de mais próximo de uma reta do que $x_3$, também possui ponto fora da banda.
+
+
+#### Bivariado
+
+Vamos primeiro observar graficamente as variáveis duas a duas através do _scatter plot_:
+
+```{r}
+data = as.data.frame(x)
+ggpairs(data)
+```
+
+Observamos que os pares $(x_1, x_2)$ e $(x_2,x_4)$ são os que mais se aproximam de uma elipse, indicando normalidade. Os outros pares, no entanto, também apresentam formato similar a uma elipse. Vamos verificar abaixo realizando o teste Shapiro multivariado.
+
+Assim como no caso anterior, utilizamos uma função do R, mas desta vez voltada para o teste multivariado:
+
+```{r}
+pares = combinations(4, 2, 1:4, repeats.allowed = F)
+x=as.matrix(x)
+W_biv = rep(0,nrow(pares))
+for (i in 1:nrow(pares)) {
+  vars = pares[i,]
+  W_biv[i] = mvShapiro.Test(x[,vars])$p.value
+}
+
+resultados = cbind(pares, W_biv)
+colnames(resultados) = c("V1", "V2", "p-value")
+rownames(resultados) = c("(x1,x2)","(x1,x3)", "(x1,x4)", "(x2,x3)", "(x2,x4)", "(x3,x4)")
+resultados
+```
+
+Observa-se, pelos p-valores encontrados, que, de fato, há evidência de que o par $(x_2, x_4)$ seja proveniente de uma distribuição normal se avaliados com os níveis de significância $\alpha = 0.1$, $\alpha = 0.5$ e $\alpha = 0.01$. Já para o par $(x_1, x_2)$ também podemos aceitar a hipótese nula de que venha de uma distribuição normal, com significância $\alpha = 0.05$ e $\alpha = 0.05$. Não rejeitamos a hipótese de normalidade para o par $(x_1, x_3)$ com nível de significância $\alpha = 0.01$ e rejeitamos a hipótese para os demais casos.
+
+Podemos ainda observar o caso multivariado: 
+
+```{r}
+mvShapiro.Test(x)
+```
+
+Concluímos que, no caso multivariado, aceitamos a hipótese de normalidade com os níveis de significância $\alpha = 0.1$, $\alpha = 0.5$ e $\alpha = 0.01$.
+
+### b) Teste a hipótese a 5% de que o vetor de média populacional seja $\mu^\intercal = [210, 3225, 360, 665]$. Informe o valor da estatística de teste, o valor crítico e conclua a respeito.
+
+Sabemos que $T^2 = n(\mathbf{\bar{x}} - \mathbf{\mu_0})^\intercal S^{-1} (\mathbf{\bar{x}} - \mathbf{\mu_0})$. Ainda, $(\mathbf{\bar{x}} - \mathbf{\mu_0})^\intercal S^{-1} (\mathbf{\bar{x}} - \mathbf{\mu_0})$ é a distância estatítica entre $\bar{x}$ e $\mu_0$. Assim, usamos a função _mahalanobis_ do R para calcular $T^2$:
+
+
+```{r}
+x_barra = colMeans(x)
+S=cov(x)
+n = nrow(x)
+p = ncol(x)
+n
+p
+mu = c(210, 3225, 360, 665)
+
+T2_cal<-n*mahalanobis(x_barra, mu, S, inverted = FALSE)
+T2_cal
+```
+
+Temos, então, que $T^2$ = `r T2_cal`.
+
+Rejeitamos $H_0$ se $$ T^2 > \frac{(n-1)p}{n-p}F_{p,n-p}(\alpha) $$ onde $$ T^2 = n*(\mathbf{\bar{x}} - \mathbf{\mu})^\intercal S^{-1} (\mathbf{\bar{x}} - \mathbf{\mu}) $$. No caso dos nossos dados, o valor crítico se dá por: $$ q = \frac{(51-1)4}{51-4}F_{4,51-4}(\alpha = 0.05) = \frac{200}{47}F_{4,47}(0.05)$$.
+
+```{r}
+q=qf(1-alpha,p,n-p)*((n-1)*p)/(n-p)
+q
+```
+Temos, então, que $q$ = `r q`.
+
+Como $T^2$ = `r T2_cal` > q = `r q`, concluímos por rejeitar $H_0: \mathbf{\mu} = [210, 3225, 360, 665]$ com nível de significância de 5%.
+
+### c) Para cada variável construa os intervalos T e bonferroni e conclua a respeito.
+
+Os intervalos de confiança simultâneos seguem a seguinte lógica:
+
+Dado **a** um vetor não aleatório qualquer e $X_1, X_2, ..., X_n$ uma amostra aleatória de $X \sim N_p(\mathbf{\mu}, \mathbf{\Sigma})$, sabemos que $\mathbf{a^\intercal X} \sim N_p(\mathbf{a^\intercal\mu}, \mathbf{a^\intercal\Sigma a})$. Assim pode-se verificar que $\left[\mathbf{a^\intercal\bar{X}} \pm \sqrt{\frac{p(n-1)}{(n-p)}F_{p,n-p}}\mathbf{a^\intercal}S\mathbf{a}\right]$ contém $\mathbf{a^\intercal\mu}$ com probabilidade $1-\alpha$. Portanto, para determinar a i-ésima média, escolhemos **a** como um vetor de zeros com o valor 1 na i-ésima posição. Assim, temos que: $$IC_{T^2}(\mu_i, 1-\alpha) = \left[\bar{x_i} \pm \sqrt{\frac{p(n-1)}{(n-p)}F_{p,n-p,\alpha}\frac{S_i^2}{n}}\right]$$
+
+Como testamos no exercício 3-a, podemos assumir que os dados são provenientes de uma distribuição normal, portanto, podemos utilizar os resultados acima.  
+
+Calculando o $IC_{T^2}$ para $\mathbf{\mu_1, \mu_2, \mu_3}$ e $\mathbf{\mu_4}$:
+
+```{r}
+# Calculando os intervalos para mu1, mu2 e mu3
+Ls=c()
+Li=c()
+for (i in 1:p) {
+  Ls[i]=(x_barra[i])+sqrt(q*S[i,i]/n)
+  Li[i]=(x_barra[i])-sqrt(q*S[i,i]/n)
+}
+
+Lim=rbind(Ls,Li)
+colnames(Lim)<-c("x1","x2", "x3", "x4")
+Lim
+```
+
+Estes resultados, porém, garantem $1-\alpha$ de confiança apenas no caso univariado, ou seja, neste caso, temos 95% de confiança que $\mu_1$ está dentro do intervalo `r Lim[,1]`, $\mu_2$ está em `r Lim[,2]`, `r Lim[,3]` contém $\mu_3$ e `r Lim[,4]` contempla $\mu_4$. Porém, não temos o mesmo nível de confiança de que um ponto $(\mu_1, \mu_2, \mu_3, \mu_4)$ esteja nos intervalos determinados. Para se obter uma confiança global de $1-\alpha$ utiliza-se a correção de Bonferroni: 
+$$ IC(\mu_i, 1-\alpha) = \left[\bar{x_i} \pm t_{n-1, \frac{\alpha}{2p}}\sqrt{\frac{S_i^2}{n}}\right]$$
+
+```{r}
+Lsb=c()
+Lib=c()
+for (i in 1:p) {
+  Lsb[i]=(x_barra[i])+qt(1-(alpha/(2*p)),n-1)*sqrt(S[i,i]/n)
+  Lib[i]=(x_barra[i])-qt(1-(alpha/(2*p)),n-1)*sqrt(S[i,i]/n)
+}
+
+Limb=rbind(Lsb,Lib)
+colnames(Limb)<-c("x1", "x2", "x3", "x4")
+Limb
+```
+
+Observa-se que os limites diminuem o seu volume total, sendo os limites superiores do IC sem correção maiores para todas as variáveis e os limites inferiores menores. Nas duas medidas de intervalo de confiança, nota-se rejeitamos $H_0$ pois  $\mu_1 = 210$ está fora dos intervalos. 
 
 
