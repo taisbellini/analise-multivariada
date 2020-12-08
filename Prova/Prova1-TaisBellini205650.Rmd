@@ -413,7 +413,7 @@ colnames(Limb)<-c("x1", "x2", "x3", "x4")
 Limb
 ```
 
-Observa-se que os limites diminuem o seu volume total, sendo os limites superiores do IC sem correção maiores para todas as variáveis e os limites inferiores menores. Nas duas medidas de intervalo de confiança, nota-se rejeitamos $H_0$ pois  $\mu_1 = 210$ está fora dos intervalos. 
+Observa-se que os limites diminuem o seu volume total, sendo os limites superiores do IC sem correção maiores para todas as variáveis e os limites inferiores menores. Nas duas medidas de intervalo de confiança, onde consideramos apenas a variância de cada variável, $\mathbf{\mu} = [210, 3225, 360, 665]$ está contemplado. No teste de hipótese, onde utilizamos a matriz de variâncias e covariâncias, $H_0$ é rejeitada.
 
 ## Exercício 4 - Um programa de reforço de estudos foi avaliado a partir de uma amstra de 15 estudantes. Cada um deles realizou provas com conteúdos de matemática, física e química antes e depois de serem submetidos ao programa de reforço.
 
@@ -611,7 +611,7 @@ Transformando os dados do grupo _Straight_:
 
 ```{r}
 straight_log = apply(straight[,-5], 2, log)
-straight_log = cbind(straight_log, rep(nrow(straight_log), 1))
+straight_log = cbind(straight_log, rep(1, nrow(straight_log)))
 
 shap_slog = mvShapiro.Test(straight_log[,-5])
 shap_slog
@@ -623,7 +623,7 @@ Para manter a consistência dos dados, vamos aplicar o log no grupo _V-shaped_ t
 
 ```{r}
 v_shaped_log = apply(v_shaped[,-5], 2, log)
-v_shaped_log = cbind(v_shaped_log, rep(nrow(v_shaped_log), 0))
+v_shaped_log = cbind(v_shaped_log, rep(0, nrow(v_shaped_log)))
 
 shap_vlog = mvShapiro.Test(v_shaped_log[,-5])
 shap_vlog
@@ -680,14 +680,14 @@ Vamos primeiro analisar os dados visualmente:
 ggpairs(X[,-5], mapping=aes(colour=as.factor(X[,5])), upper=list(combo= 'blank', continuous='blank'), title = "Gráfico 5.1")
 ```
 
-Implementando o teste de hopótese:
+Implementando o teste de hipótese:
 ```{r}
-xv_barra = colMeans(v_shaped_log)
-Sv = cov(v_shaped_log)
+xv_barra = colMeans(v_shaped_log[,-5])
+Sv = cov(v_shaped_log[,-5])
 nv = nrow(v_shaped_log)
 
-xs_barra = colMeans(straight_log)
-Ss = cov(straight_log)
+xs_barra = colMeans(straight_log[,-5])
+Ss = cov(straight_log[,-5])
 ns = nrow(straight_log)
 n = nv+ns
 
@@ -696,7 +696,7 @@ S_pool = ((nv-1)*Sv+(ns-1)*Ss)/(n-2)
 Sco = ((1/nv)+(1/ns))*S_pool
 
 alpha=0.05
-p=ncol(v_shaped_log)
+p=ncol(v_shaped_log[,-5])
 mu=c(0,0,0,0)
 
 T2_cal<-mahalanobis(xv_barra-xs_barra,mu,Sco,inverted = FALSE)
@@ -749,5 +749,73 @@ Limb
 
 Observa-se pelos intervalos que nenhum contempla o zero, ou seja, há diferença entre as médias de todas as variáveis para os motores _V-Shaped_ e _Straight_.
 
+## Exercício 6
+
+Dados: 
+
+```{r}
+xx=data.frame(carData::Salaries)
+x=xx[which(xx[,1]=="Prof"),-1] ##Restringe a analise apenas ao #Professors# (Rank=Prof)
+head(x)
+
+#Fator1: discipline A (theoretical departments) or B (applied departments))
+#Fator2: gender(Female or Male)
+
+#variaveis de analise:
+#x1: yrs.since.phd (anos desde que completou o phd)
+#x2: yrs.service (anos de servico)
+#x3: Salário
+```
 
 
+### a) Realize a MANOVA a 5% e conclua a respeito. Informe o valor da estatística de Wilks e seu valor p.
+
+
+Vamos utilizar a função _manova_ do R para observar a interação dentro e entre fatores:
+```{r}
+x_vars = as.matrix(x[,c(2,3,5)])
+disc = x[,1]
+sex = x[,4]
+mnv <- manova(x_vars ~ disc * sex)
+mnv
+```
+
+```{r}
+summary(mnv, test = "Wilks") # ANOVA table of Wilks' lambda
+```
+
+A estatística de Wilks para o fator _Disciplina_ é 0.88, para _Sexo_ é 0.97 e para a interação 0.98. Os p-valores para estas estatísticas são $5.33e^{-07}$, 0.14 e 0.18, respectivamente. Observa-se que apenas o fator Disciplina obteve valor significiativo a 5%, evidenciando influência nas variáveis _Salário_, _Anos de serviço_ e _Anos desde o PhD_.
+
+### b) Realize a ANOVA em cada variável a 5% e conclua a respeito. Informe o valor da estatística F e seu valor p.
+
+Agora, vamos observar a ANOVA para cada variável:
+
+```{r}
+summary.aov(mnv)
+```
+
+No resultado acima, é possível observar a estatística F e o p-valor para cada fator e interação de fatores separado por variável.
+Observamos que, para as variáveis _Anos desde o PhD_ e _Anos de serviço_, tanto Disciplina quanto Sexo possuem valores p significativos a 5%, mas a interação não. Já no caso da variável _Salario_, apenas Disciplina apresenta evidência de influência.
+
+### c) Faça uma conclusão geral sobre os resultados.
+
+Nos resultados da MANOVA, observamos uma influência do fator _Disciplina_ nos dados, ou seja, fixando os outros fatores, há evidência de que a alteração do valor da Disciplina gera uma alteração nas variáveis _Salário_, _Anos de Serviço_ e _Anos desde o PhD_.
+
+Quando descemos para a ANOVA por variável, observa-se que, de fato, apenas o fator _Disciplina_ é significativo para todas as variáveis. Ainda, conseguimos observar que _Sexo_ também possui influência em todas as variáveis com exceção do _Salário_. 
+
+Podemos visualizar este resultado no gráfico abaixo:
+
+```{r}
+par(mfrow=c(2,3))
+plot(x_vars[,1]~disc, ylab = "Anos desde PhD", xlab = "Disciplina")
+plot(x_vars[,2]~disc, ylab = "Anos de Serviço", xlab = "Disciplina")
+plot(x_vars[,3]~disc, ylab = "Salário", xlab = "Disciplina")
+plot(x_vars[,1]~sex, ylab = "Anos desde PhD", xlab="Sexo")
+plot(x_vars[,2]~sex, ylab = "Anos de Serviço", xlab="Sexo")
+plot(x_vars[,3]~sex, ylab = "Salário", xlab = "Sexo")
+```
+
+Note que, na primeira linha, observamos uma mudança na média quando vamos da _Disciplina_ A para a B e nota-se que esta mudança é menor para a variável _Anos de serviço_, como constatou-se nos p-valores da ANOVA. 
+Ainda, observamos uma mudança também nas variáveis _Anos de serviço_ e _Anos desde o PhD_ quando alteramos o fator _Sexo_ de Homem para Mulher.
+
+Portanto, temos que a Disciplina A possui professores com mais anos desde que obtiveram o título de PhD, porém com salários menores. Também há evidências de que os professores homens possuem mais tempo de serviço e mais tempo desde que obtiveram o PhD, mas não há evidência de que professores homens recebam mais ou menos remuneração que as professoras mulheres.
