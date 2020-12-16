@@ -740,3 +740,24 @@ d2
 qqPlot(d2, dist="chisq", df=ncol(x), main=paste("Chi-dist"), ylab=paste("d2"))
 
 
+#### Cap 5 ####
+
+#### 5.1 ####
+remove(list = ls())
+#b) 
+
+X = cbind(c(2,8,6,8), c(12,9,9,10))
+n = nrow(X)
+p = ncol(X)
+x_bar = apply(X, 2, mean)
+mu = c(7,11)
+S = cov(X)
+alpha = 0.05
+T2_cal<-n*mahalanobis(x_bar, mu, S, inverted = FALSE)
+T2_cal
+
+q=qf(1-alpha,p,n-p)*((n-1)*p)/(n-p)
+q
+
+
+
