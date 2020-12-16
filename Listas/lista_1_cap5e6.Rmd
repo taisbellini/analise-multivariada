@@ -214,7 +214,7 @@ Dados do exemplo 5.3: $$
               \end{bmatrix}$$
 $$ n = 42 \\ p = 2$$
 
-Rejeitamos $H_0$ se $$ T^2 > \frac{(n-1)p}{n-p}F_{40,2}(\alpha) $$ onde $$ T^2 = n*(\mathbf{\bar{x}} - \mathbf{\mu})^\intercal S^-1 (\mathbf{\bar{x}} - \mathbf{\mu}) $$
+Rejeitamos $H_0$ se $$ T^2 > \frac{(n-1)p}{n-p}F_{2,40}(\alpha) $$ onde $$ T^2 = n*(\mathbf{\bar{x}} - \mathbf{\mu})^\intercal S^-1 (\mathbf{\bar{x}} - \mathbf{\mu}) $$
 
 ```{r}
 n = 42
@@ -289,4 +289,70 @@ Limb
 ```
 
 Observa-se que os limites diminuem o seu volume total, sendo os limites superiores do IC sem correção maiores para todas as variáveis e os limites inferiores menores.
+
+### 5.18 
+
+```{r}
+remove(list = ls())
+
+# Carregando os dados
+data = read.delim("../Wichern_data/T5-2.DAT", header = F, sep = "", stringsAsFactors = F)
+colnames(data) = c("x1", "x2", "x3")
+n = nrow(data)
+p = ncol(data)
+
+```
+
+## Cap 6 
+
+### 6.1 Construir o intervalo de confiança de 95% para a média das diferenças para o bancod e dados da tabela 6.1.
+
+Nos dados, temos as medições de duas variáveis: $x_1 = body\ oxygen\ demand, x_2 = suspended\ solids$ feitas por dois laboratórios diferentes.
+
+```{r}
+data = read.delim("../Wichern_data/T6-1.DAT", header = F, sep = "", stringsAsFactors = F)
+colnames(data) = c("x11", "x12", "x21", "x22")
+head(data)
+```
+
+Para identificar se há diferença entre as medições do laboratório 1 para o laboratório 2,
+computamos a diferença entre as medições de $x_1$ e $x_2$ por cada laboratório ($\mathbf{d = d_1 - d_2}$), a média das diferenças ($\mathbf{\bar{d}}$) e a covariância das diferenças ($S_d$), e calculamos a estatística $T_2$, como já realizado nos exercícios acima. Pelo Exemplo 6.1, temos que a hipótese $H_0: 
+$$IC_{T^2}(\mu_i, 1-\alpha) = \left[\bar{x_i} \pm \sqrt{\frac{p(n-1)}{(n-p)}F_{p,n-p,\alpha}\frac{S_i^2}{n}}\right]$$
+
+```{r}
+# Diferenca entra as medicoes dos laboratorios
+d1=data[,1]-data[,3]
+d2=data[,2]-data[,4]
+d<-matrix(c(d1,d2), ncol=2)
+d
+
+n = nrow(d)
+p = ncol(d)
+d_barra = as.vector(colMeans(d))
+Sd = cov(d)
+alpha = 0.05
+
+T2_cal = n*mahalanobis(d_barra, c(0,0), Sd, inverted = F)
+q=((n-1)*p)/(n-p)*qf(1-alpha,p,n-p)
+T2_cal
+q
+
+require(ellipse)
+plot(ellipse(Sd/n,centre=d_barra,level=1-alpha,npoints=1000),type='l',asp=1,xlim=c(-20,20), ylim = c(-2, 25), xlab= "mud1", ylab= "mud2") 
+text(d_barra[1],d_barra[2],"[-9.36,13.27]")
+text(0,0,"[0,0]")
+
+
+##Intervalos Simulataneos
+Ls=c()
+Li=c()
+for (i in 1:p) {
+  Ls[i]=(d_barra[i])+sqrt(q*Sd[i,i]/n)
+  Li[i]=(d_barra[i])-sqrt(q*Sd[i,i]/n)
+  
+}
+
+Lim=rbind(Ls,Li)
+
+```
 
