@@ -51,7 +51,7 @@ W[k]=shapiro.test(x[,k])$p.value }
 W
 
 
-#############TEste de Normalidade Multivariada#############
+#############Teste de Normalidade Multivariada#############
 x=as.matrix(x)
 mvShapiro.Test(x)  ## teste Shapiro
 
