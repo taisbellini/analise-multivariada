@@ -1,0 +1,222 @@
+---
+title: "Lista 2 - EST0204"
+author: "Tais Bellini"
+date: "12/18/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Cap 8
+
+### 8.1 Determinar os componentes principais $Y_1$ e $Y_2$ da população e a proporção da população explicada pelo primeiro componente. 
+
+Dados: 
+
+$$ \Sigma = \begin{bmatrix}
+            5 & 2 \\
+            2 & 2 
+            \end{bmatrix} $$
+            
+Temos que:
+$Y_i = \mathbf{e_i}^\intercal X$ onde, $\mathbf{e_i}$ é o autovetor associado ao i-ésimo autovalor $\lambda_i$.
+
+Calculando os autovetores:
+```{r}
+S = matrix(c(5,2,2,2), ncol = 2)
+eig = eigen(S)
+eig
+```
+
+Assim,
+
+$$Y_1 = \begin{bmatrix}
+        -0.89 \\ -0.44
+        \end{bmatrix} \mathbf{X}$$
+
+$$Y_2 = \begin{bmatrix}
+        0.44 \\ -0.89
+        \end{bmatrix} \mathbf{X}$$
+
+A proporção da variância populacional explicada (PVE) pelo componente $Y_1$ se dá da seguinte forma: 
+$$ Proportion = \frac{\lambda_1}{\lambda_1+\lambda_2} = \frac{6}{6+1}$$
+
+Portanto, temos que a $PVE_1$ = `r eig$values[1]/(eig$values[1]+eig$values[2])`.
+
+### 8.2 
+
+#### a) Determinar os componentes principais $Y_1$ e $Y_2$ da população a partir de $\rho$ e a proporção da população explicada pelo primeiro componente. 
+
+Calculando a matriz de correlação $\rho$ (de duas formas diferentes):
+```{r}
+S = matrix(c(5,2,2,2), ncol = 2)
+rho = solve(diag(sqrt(diag(S)))) %*% S %*% solve(diag(sqrt(diag(S))))
+rho2 = cov2cor(S)
+```
+
+Determinando $Y_1$ e $Y_2$: 
+
+```{r}
+eig_rho = eigen(rho)
+eig_rho
+```
+
+$$Y_1 = \begin{bmatrix}
+        -0.707 \\ -0.707
+        \end{bmatrix} \mathbf{X}$$
+
+$$Y_2 = \begin{bmatrix}
+        0.707 \\ -0.707
+        \end{bmatrix} \mathbf{X}$$
+
+A proporção da variância populacional explicada (padornizada) (PVE_std) pelo componente $Y_1$ se dá da seguinte forma: 
+$$ Proportion = \frac{\lambda_1}{p} = \frac{1.63}{2}$$
+
+Portanto, temos que a $PVEStd_1$ = `r eig_rho$values[1]/ncol(S)`.
+
+#### b) Compare os componentes encontrados. São os mesmos? Deveriam ser?
+
+Não são os mesmos. Observamos que, quando utilizamos $\Sigma$, a influência das variáveis $X_1$ e $X_2$ nos componentes diferem, já quando usamos $\rho$, as variáveis contribuem na mesma proporção. A proporção da variância explicada por $Y_1$ difere um pouco, mas em ambas fica entre 0.8 e 0.86.
+
+#### c) Compute a correlação $\rho_{Y_1,Z_1}$, $\rho_{Y_1,Z_2}$ e $\rho_{Y_2,Z_1}$.
+
+Sabemos que $\rho_{Y_i,Z_k} = e_{ik}\sqrt{\lambda_i}$. Portanto,
+
+$$ \rho_{Y_1,Z_1} = e_{11}\sqrt{\lambda_1} = -0.707\sqrt{1.63} = -0.9$$
+$$ \rho_{Y_1,Z_2} = e_{12}\sqrt{\lambda_1} = 0.707\sqrt{1.63} = 0.9$$
+$$ \rho_{Y_2,Z_1} = e_{21}\sqrt{\lambda_1} = -0.707\sqrt{1.63} = -0.42$$
+
+### 8.3 Determinar os componentes principais $Y_1$, $Y_2$ e $Y_3$. O que se pode afirmar sobre os autovetores (e componentes principais) associados com os autovalores que não são distintos?
+Dados:
+
+$$\Sigma = \begin{bmatrix}
+            2 & 0 & 0 \\
+            0 & 4 & 0 \\
+            0 & 0 & 4 
+            \end{bmatrix}$$
+            
+```{r}
+S = matrix(c(2,0,0,0,4,0,0,0,4), ncol = 3)
+eigen(S)
+```
+         
+$$Y_1 = \begin{bmatrix}
+        0 \\ 0 \\ 1
+        \end{bmatrix} \mathbf{X} = X_3$$
+
+$$Y_2 = \begin{bmatrix}
+        0 \\ 1 \\ 0
+        \end{bmatrix} \mathbf{X} = X_2$$
+
+$$Y_3 = \begin{bmatrix}
+        0 \\ 0 \\ 1
+        \end{bmatrix} \mathbf{X} = X_1$$
+
+Percebe-se que não há ganho em utilizar PCA neste caso, pois os componetnes principais são as proprias variáveis. Os dois primeiros componentes explicam a mesma proporção da variância, por possuir o mesmo autovalor.
+
+### 8.4 Encontrar os componentes principais e PVE.
+
+Dados:
+$$\Sigma = \begin{bmatrix}
+          \sigma^2 & \sigma^2\rho & 0 \\
+          \sigma^2\rho & \sigma^2 & \sigma^2\rho \\
+          0 & \sigma^2\rho & \sigma^2 
+          \end{bmatrix}$$
+
+Para determinar os autovalores, temos que: 
+
+$$|\Sigma - I\lambda| = 0$$
+$$(\sigma^2-\lambda)^3 - (\sigma^2-\lambda)(\sigma^2\rho)^2 - (\sigma^2-\lambda)(\sigma^2\rho)^2 = 0$$ 
+
+$$(\sigma^2-\lambda)^3 - 2(\sigma^2-\lambda)(\sigma^2\rho)^2 = 0$$
+$$(\sigma^2-\lambda)[(\sigma^2-\lambda) - 2(\sigma^2\rho)^2] = 0$$
+Portanto, vamos ter o resultado zero na equação quando: $\sigma^2-\lambda = 0$, ou seja, $\lambda_1 = \sigma^2$; ou quando $(\sigma^2-\lambda)^2-2\sigma^4\rho^2 = 0$, ou seja, $\lambda_2 = \sigma^2(1+\sqrt{2}\rho)$ e $\lambda_3 = \sigma^2(1-\sqrt{2}\rho)$.
+
+
+Encontrando os autovetores: 
+
+Para $\lambda_1 = \sigma^2$:
+$$ \left[\Sigma - I\lambda\right]e_1 = 0$$
+$$ \begin{bmatrix}
+          \sigma^2-\sigma^2 & \sigma^2\rho & 0 \\
+          \sigma^2\rho & \sigma^2-\sigma^2 & \sigma^2\rho \\
+          0 & \sigma^2\rho & \sigma^2-\sigma^2 
+          \end{bmatrix} \begin{bmatrix} e_{11} \\ e_{21} \\ e_{31}\end{bmatrix} = 0$$
+$$ \begin{bmatrix}
+          0 & \sigma^2\rho & 0 \\
+          \sigma^2\rho & 0 & \sigma^2\rho \\
+          0 & \sigma^2\rho & 0 
+          \end{bmatrix} \begin{bmatrix} e_{11} \\ e_{21} \\ e_{31}\end{bmatrix} = 0$$
+
+          
+$$ e_1 = \begin{bmatrix} -1 \\ 0 \\ 1 \end{bmatrix}$$ 
+Normalizando: 
+
+$$ e_1 = \begin{bmatrix} \frac{-1}{\sqrt{2}} \\ 0 \\ \frac{1}{\sqrt{2}} \end{bmatrix}$$ 
+Para $\lambda_2 = \sigma^2(1+\sqrt{2}\rho)$:
+$$ \left[\Sigma - I\lambda\right]e_2 = 0$$
+$$ \begin{bmatrix}
+          \sigma^2-\sigma^2(1+\sqrt{2}\rho) & \sigma^2\rho & 0 \\
+          \sigma^2\rho & \sigma^2-\sigma^2(1+\sqrt{2}\rho) & \sigma^2\rho \\
+          0 & \sigma^2\rho & \sigma^2-\sigma^2(1+\sqrt{2}\rho) 
+          \end{bmatrix} \begin{bmatrix} e_{11} \\ e_{21} \\ e_{31}\end{bmatrix} = 0$$
+$$ \begin{bmatrix}
+          -\sigma^2\sqrt{2}\rho & \sigma^2\rho & 0 \\
+          \sigma^2\rho & -\sigma^2\sqrt{2}\rho & \sigma^2\rho \\
+          0 & \sigma^2\rho & -\sigma^2\sqrt{2}\rho 
+          \end{bmatrix} \begin{bmatrix} e_{11} \\ e_{21} \\ e_{31}\end{bmatrix} = 0$$
+
+$$ e_2 = \begin{bmatrix} \frac{1}{\sqrt{2}} \\ 1 \\ \frac{1}{\sqrt{2}} \end{bmatrix}$$ 
+
+Normalizando: 
+
+$$ e_2 = \begin{bmatrix} \frac{1}{2} \\ \frac{1}{\sqrt{2}} \\ \frac{1}{2} \end{bmatrix}$$ 
+
+Para $\lambda_3 = \sigma^2(1-\sqrt{2}\rho)$:
+$$ \left[\Sigma - I\lambda\right]e_3 = 0$$
+$$ \begin{bmatrix}
+          \sigma^2-\sigma^2(1-\sqrt{2}\rho) & \sigma^2\rho & 0 \\
+          \sigma^2\rho & \sigma^2-\sigma^2(1-\sqrt{2}\rho) & \sigma^2\rho \\
+          0 & \sigma^2\rho & \sigma^2-\sigma^2(1-\sqrt{2}\rho) 
+          \end{bmatrix} \begin{bmatrix} e_{11} \\ e_{21} \\ e_{31}\end{bmatrix} = 0$$
+$$ \begin{bmatrix}
+          \sigma^2\sqrt{2}\rho & \sigma^2\rho & 0 \\
+          \sigma^2\rho & \sigma^2\sqrt{2}\rho & \sigma^2\rho \\
+          0 & \sigma^2\rho & \sigma^2\sqrt{2}\rho 
+          \end{bmatrix} \begin{bmatrix} e_{11} \\ e_{21} \\ e_{31}\end{bmatrix} = 0$$
+
+$$ e_3 = \begin{bmatrix} -\frac{1}{\sqrt{2}} \\ 1 \\ -\frac{1}{\sqrt{2}} \end{bmatrix}$$ 
+
+Normalizando: 
+
+$$ e_3 = \begin{bmatrix} -\frac{1}{2} \\ \frac{1}{\sqrt{2}} \\ -\frac{1}{2} \end{bmatrix}$$ 
+
+### 8.10
+
+Dados: 
+```{r}
+data = read.delim("../Wichern_data/T8-4.DAT", header = F, sep = "", stringsAsFactors = F)
+colnames(data) = c("JP Morgan", "CitiBank", "Wells Fargo", "Royal Dutch Shell", "Exxon Mobil")
+head(data)
+```
+
+#### a) Covariancia amostral e componentes principais
+
+```{r}
+S = cov(data)
+S
+
+pca = prcomp(data)
+pca
+```
+
+#### b) 
+```{r}
+summary(pca)
+```
+
+Observamos que proporção da variância explicada pelas 3 primeiras componentes principais é de 0.89. Na primeira componente principal, temos uma maior influência do preço das ações dos bancos Royal Dutch Schell e Exxon Mobil, ou seja, seria uma componente de mercado de combustíveis. Já a segunda é influenciada majoritariamente por JP Morgan e Citibank, seguidos por Wells Fargo, sugerindo uma componente voltada ao mercado bancário. 
+
+#### c) 
