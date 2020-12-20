@@ -88,6 +88,10 @@ v
 E=load%*%t(load)+diag(v)
 
 Res=cor(x)-E
+# E eh a reconstrucao da matriz de covariancias.
+# a variancia(diag principal) nós conseguimos reconstruir. Porem, a covariancia nao (e nao seria esperado pois usamos 3 fatores e os dados tem 5 vars).
+#Observamos que fica proximo e na matriz de residuos abaixo vemos o quando ficou "inexplicado".
+
 
 #Res1=fitpca$residual-diag(v)
 
@@ -136,9 +140,6 @@ v
 #l=fitpca$loadings
 #l
 E=load%*%t(load)+diag(v)
-# E eh a reconstrucao da matriz de covariancias.
-# a variancia(diag principal) nós conseguimos reconstruir. Porem, a covariancia nao (e nao seria esperado pois usamos 3 fatores e os dados tem 5 vars).
-#Observamos que fica proximo e na matriz de residuos abaixo vemos o quando ficou "inexplicado".
 
 Res=cor(x)-E
 
@@ -164,4 +165,10 @@ qq
 mm=0.5*(2*p+1-sqrt(8*p+1)) ##Condicao para aplicar o teste:  
 ## m (numero de fatores retidos) menor ou igual a mm
 m<=mm
+
+
+## Varimax
+fitmle<-factanal(x,2, rotation="varimax", scores="regression")  
+fitmle
+
 
