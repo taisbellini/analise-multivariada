@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=60), tidy = T)
 ```
 
 ## Cap 8
@@ -208,7 +208,7 @@ head(data)
 S = cov(data)
 S
 
-pca = prcomp(data)
+pca = prcomp(data, scale =T)
 pca
 ```
 
@@ -217,6 +217,85 @@ pca
 summary(pca)
 ```
 
-Observamos que proporção da variância explicada pelas 3 primeiras componentes principais é de 0.89. Na primeira componente principal, temos uma maior influência do preço das ações dos bancos Royal Dutch Schell e Exxon Mobil, ou seja, seria uma componente de mercado de combustíveis. Já a segunda é influenciada majoritariamente por JP Morgan e Citibank, seguidos por Wells Fargo, sugerindo uma componente voltada ao mercado bancário. 
+```{r}
+biplot(pca)
+```
 
-#### c) 
+Observamos que proporção da variância explicada pelas 3 primeiras componentes principais é de 0.89. Na primeira componente principal, temos uma soma ponderada de todos os retornos das ações das diferentes empresas, indicando ser um componente de mercado. Já a segunda faz uma separação entre JP Morgan, Citibank e Wells Fargo dos demais, sugerindo uma componente voltada ao tipo de indústria (banco ou combustível). A terceira componente não possui interpretação clara. 
+
+#### c) Construir os intervalos de confiança simultâneos de Bonferroni com 90% de confiança para as variâncias $\lambda_1, \lambda_2$ e $\lambda_3$.
+
+Como temos um n = 103, podemos utilizar os seguintes resultados para calcular os intervalos de Bonferroni: 
+$$ \frac{\hat{\lambda_i}}{(1+z(\alpha/2)\sqrt{2/n})} \leq \lambda_i \leq \frac{\hat{\lambda_i}}{(1-z(\alpha/2)\sqrt{2/n})}$$
+
+Portanto, temos que:
+```{r}
+n = nrow(data)
+alpha = 0.1
+z = qnorm(1-(alpha/2))
+lambdas = eigen(S)$values
+
+intervalos = matrix(nrow = 2, ncol = 3)
+colnames(intervalos) = c("lambda1", "lambda2", "lambda3")
+rownames(intervalos) = c("Linf", "Lsup")
+
+for (i in 1:3){
+  intervalos[1, i] = lambdas[i]/(1+z*sqrt(2/n))
+  intervalos[2, i] = lambdas[i]/(1-z*sqrt(2/n))
+}
+intervalos
+```
+
+#### d) Os dados da taxa de retorno das ações podem ser explicados com menos variaveis?
+
+Sim, observamos no exercicio b que quase 90% da variância é explicada pelas primeiras 3 componentes. O gráfico abaixo apresenta uma visão gráfica deste resultado.
+
+```{r}
+screeplot(pca, type = "l")
+```
+
+### 8.11 
+
+Dados: 
+```{r}
+remove(list = ls())
+data = read.delim("../Wichern_data/T8-5.DAT", header = F, sep = "", stringsAsFactors = F)
+data[,5] = sapply(data[,5], function(x){x*10})
+colnames(data) = c("Total pop(thousands)", "Professional Degree(%)", "Employed over 16(%)", "Govmt employment(%)", "Median home value($10.000)")
+head(data)
+```
+
+#### a) Obter a matriz de covariancia
+
+```{r}
+S = cov(data)
+S
+```
+
+#### b) Obter os autovalores e autovetores das 2 primeiras componentes principais.
+
+```{r}
+eig = eigen(S)
+eig
+```
+
+#### c) Computar a proporção da variância explicada pelas primeiras duas componentes principais e calcular os coeficientes de correlação. Comparar com os resultados do exemplo 8.3.
+
+```{r}
+pca = prcomp(data, scale = F)
+pca
+summary(pca)
+
+#calculando pelas formulas
+prop1 = eig$values[1]/sum(eig$values)
+prop2 = eig$values[2]/sum(eig$values)
+prop1+prop2
+```
+
+Aqui, temos uma proporção acumulada de 0.79 nas duas primeiras componentes principais.
+
+```{r}
+t(cor(pca$x, data))
+```
+
+Observa-se que a primeira componente principal está mais correlacionada com emprego, contrastando o percentual total de empregados vs. o percentual de empregados pelo governo. Isto não mudou em relação ao exercício 8.3. Já a componente principal 2, observamos o peso de diploma, emprego e valor mediano de imóvel. Observamos que a variável cuja escala foi alterada (Median home value) passa a fazer parte significativa na componente principal 2, em comparação com o exercício 8.3.
