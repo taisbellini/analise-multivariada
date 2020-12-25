@@ -152,6 +152,7 @@ $$ \begin{bmatrix}
 
           
 $$ e_1 = \begin{bmatrix} -1 \\ 0 \\ 1 \end{bmatrix}$$ 
+
 Normalizando: 
 
 $$ e_1 = \begin{bmatrix} \frac{-1}{\sqrt{2}} \\ 0 \\ \frac{1}{\sqrt{2}} \end{bmatrix}$$ 
@@ -299,3 +300,47 @@ t(cor(pca$x, data))
 ```
 
 Observa-se que a primeira componente principal está mais correlacionada com emprego, contrastando o percentual total de empregados vs. o percentual de empregados pelo governo. Isto não mudou em relação ao exercício 8.3. Já a componente principal 2, observamos o peso de diploma, emprego e valor mediano de imóvel. Observamos que a variável cuja escala foi alterada (Median home value) passa a fazer parte significativa na componente principal 2, em comparação com o exercício 8.3.
+
+### 8.18
+Dados: 
+
+```{r}
+remove(list = ls())
+data = read.delim("../Wichern_data/T1-9.DAT", header = F, sep = "\t", stringsAsFactors = F)
+colnames(data) = c("Country", "100m", "200m", "400m", "800m", "1500m", "3000m", "Marathon")
+head(data)
+```
+
+#### a) Obtenha a matriz de correlação e determine os autovalores e autovetores.
+
+```{r}
+R = cor(data[,-1])
+eig = eigen(R)
+eig
+```
+
+#### b) Determine as duas primeiras componentes principais para as variaveis padronizadas. Prepare uma tabela com a correlação entre as variáveis padronizadas com os componentes e o percentual cumulativo da variância total (padronizada) explicada pelos dois componentes.
+
+```{r}
+pca = prcomp(data[,-1], scale. = T)
+pca$rotation[,1:2]
+pca_summary = summary(pca)
+paste("Cumulative proportion: ", pca_summary$importance[3,2])
+print("Correlation between variables and PC")
+t(cor(pca$x, data[,-1])[1:2,])
+```
+
+#### c) Interprete as componentes principais
+
+A componente 1 é uma soma ponderada da velocidade de cada nação para cada distância. A segunda componente aparenta fazer um contraste entre distâncias curtas e longas, sendo 800m a primeira distância mais longa.
+
+#### d) Ordene pela primeira CP e analise
+
+```{r}
+n = nrow(data)
+ss=data.frame(ord=seq(1,n,by=1), y=pca$x[,1])
+ss_ord = ss[order(ss[,2], decreasing=T),]
+data[ss_ord[1:3,1],1]
+```
+
+Sim, EUA, Alemanha e Russia fazem sentido como sendo os países com melhor desempenho.
