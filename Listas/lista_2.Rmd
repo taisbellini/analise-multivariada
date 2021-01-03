@@ -511,3 +511,95 @@ Res
 ```
 
 ### 9.12
+
+Dados: 
+
+$$ S = 10^{-3} \begin{bmatrix}
+                    11.072 &   &  \\
+                    8.019 & 6.417 & \\
+                    8.160 & 6.005 & 6.773 
+                    \end{bmatrix}$$
+                    
+
+
+\begin{table}[h!]
+\begin{tabular}{|c|c|}
+\hline
+Variable & Estimated factor loadings (F1) \\ \hline
+ln(length) & 0.1022 \\
+ln(width)  & 0.0752 \\
+ln(height) & 0.0765 \\ \hline
+\end{tabular}
+\end{table}
+
+#### a) Variância específica
+
+```{r}
+S = matrix(c(11.072, 8.019, 8.160, 8.019, 6.417, 6.005, 8.160, 6.005, 6.773), ncol = 3)*10^-3
+L = matrix(c(0.1022, 0.0752, 0.0765))
+LL = L%*%t(L)
+```
+
+
+Sabemos que $Cov(X) = S = LL^\intercal + \psi$. Como temos os valores de $S$ e $L$, podemos encontrar a variância específica $\psi$: 
+
+$$\psi_i = Sn_{ii} - \hat{h_{i}^2}$$ onde:
+$\hat{h_{i}^2} = l_{i1}^2$ pois temos apenas 1 fator (m=1) e $Sn = \frac{(n-1)}{n}S$, pois estamos utilizando o método da máxima verossimilhança. 
+
+```{r}
+n = 24
+Sn = (n-1)/n*S
+psi = diag(Sn) - diag(LL)
+psi
+```
+
+#### b) Comunalidades
+
+Calculado acima: $h_i^2 = l_{i1}^2$. 
+```{r}
+diag(LL)
+```
+
+#### c) Proporção explicada pelo fator
+
+```{r}
+sum(diag(LL))/sum(diag(Sn))
+```
+
+#### d) Matriz residual
+
+```{r}
+Sn - LL - psi
+```
+
+## Cap 12
+
+### 12.1
+
+Dados: 
+
+```{r}
+remove(list = ls())
+data = data.frame(
+  President = c("Reagan", "J. Carter", "G. Ford", "R. Nixon", "L. Johnson", "J. Kennedy"),
+  BirthPlace = c("Midwest", "South", "Midwest", "West", "South", "East"),
+  ElectedFirstTerm = c("Yes", "Yes", "No", "Yes", "No", "Yes"),
+  Party = c("Rep", "Dem", "Rep", "Rep", "Dem", "Dem"),
+  PriorEx = c("No", "No",  "Yes", "Yes", "Yes", "Yes"),
+  VicePres = c("No", "No", "Yes", "Yes", "Yes", "No"), stringsAsFactors = T
+)
+data
+```
+
+#### a) 
+
+Reagan e Carter: 
+\begin{table}[h!]
+\begin{tabular}{cc|cc}
+       &   & Reagan &   \\
+       &   & 1      & 0 \\ \hline
+Carter & 1 & 1      & 1 \\
+       & 0 & 1      & 2
+\end{tabular}
+\end{table}
+
