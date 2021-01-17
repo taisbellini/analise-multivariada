@@ -29,8 +29,8 @@ data = read.table("BD1.txt", header=T,sep="")
 colnames(data) = c("id",  "c. mandibula", "l. mand. 1 molar", "l. cond art.", 
                    "a. mand. 1 molar", "c. 1 molar", "l. 1 molar", 
                    "c. 1-3 molar", "c. 1-4 premolar", "l. canino inf.", "raca")
-head(data[2:10])
-summary(data[2:10])
+head(data[,2:11])
+colMeans(data[,2:10])
 ```
 
 
@@ -47,18 +47,29 @@ Vamos utilizar a função do R _prcomp_ para determinar as componentes principai
 
 ```{r}
 pca = prcomp(data[,2:10], scale. = T)
-pca
 paste("Maiores autovalores:")
 pca$sdev[1:2]^2
 paste("Autovetores associados, respectivamente:")
 pca$rotation[,1:2]
 ```
 
+Observe que obtemos os mesmos resultados através da função _eigen_ do R na matriz de covariância padronizada:
+
+```{r}
+eig = eigen(cov(scale(data[,2:10])))
+
+paste("Maiores autovalores funcao eigen:")
+eig$values[1:2]
+paste("Autovetores associados funcao eigen, respectivamente:")
+eig$vectors[,1:2]
+```
+
+
 ```{r}
 summary(pca)
 ```
 
-Podemos observar que o percentual acumulado da variância explicada é 0.86.
+Podemos observar que o percentual acumulado da variância explicada das duas primeiras componentes principais é 0.86.
 
 ```{r}
 ggbiplot(pca, main = "Correlação das variáveis com PC1 e PC2") + theme_minimal() 
@@ -77,7 +88,7 @@ summary(data[,11])
 ss_ord[1:20,]
 ```
 
-Oberva-se que há uma predominância dos Lobos indianos, sendo que todas as observações desta espécie estão nos primeiros 20, o que indica que é uma raça com predominância destas variáveis observadas, já que a primeira componente principal é uma ponderação de todas as variáveis. Se observarmos abaixo, a média das medidas das observações de Lobos Indianos é superior a média amostral para todas as variáveis.
+Oberva-se que a maioria das observações com maior escore na primeira componente principal são da raça Lobos Indianos, sendo que todas as observações desta espécie estão nos primeiros 20, o que indica que é uma raça com predominância destas variáveis observadas, já que a primeira componente principal é uma ponderação de todas as variáveis. Se observarmos abaixo, a média das medidas das observações de Lobos Indianos é superior a média amostral para todas as variáveis.
 
 ```{r}
 paste("Media das variaveis para Lobos Indianos:")
@@ -122,7 +133,7 @@ Portanto, para os dados em análise, temos:
 diag(var(scale(data[2:10]))) - comm
 ```
 
-Padronizamos os dados pois eles possuem valores muito discrepantes entre eles, além de se o padrão da função _factanal_, usada para esta análise. Podemos obter a variância específica utilizando esta função também, e observamos que os resultados são praticamente os mesmos:
+Padronizamos os dados pois eles possuem valores muito discrepantes entre eles, além de ser o padrão da função _factanal_, usada para esta análise. Podemos obter a variância específica utilizando esta função também, e observamos que os resultados são praticamente os mesmos:
 
 ```{r}
 v = fac$uniquenesses
@@ -133,7 +144,122 @@ v
 
 ```{r}
 plot(fac$loadings[,1], fac$loadings[,2], xlab = "Factor 1", ylab = "Factor 2")
-text(fac$loadings[,1]+0.008, fac$loadings[,2]-0.008, colnames(data[2:10]), col = "red", ylim= c(-1,1), xlim = c(-1,2))
+text(fac$loadings[,1]+0.04, fac$loadings[,2]-0.008, colnames(data[2:10]), col = "red", ylim= c(-1,1), xlim = c(-1,2))
 ```
 
-  
+Observamos que com a rotação temos as cargas do fator um com uma maior separação entre comprimento e largura/altura do que quando avaliamos via PCA. Neste caso, altura e largura possuem mais peso no Fator 1, enquanto no Fator 2 temos o comprimento com maiores valores.
+
+
+## Exercicio 2
+
+Dados padronizados:
+
+```{r}
+remove(list = ls())
+
+data = read.table("nacoes2.txt", header=T,sep="")
+colMeans(data[,2:9])
+std_data = data
+std_data[,2:9] = scale(std_data[,2:9])
+```
+
+### a) Proceda a uma Análise de Cluster dos países utilizando dois métodos hierárquicos (o complete linkage e o de Ward) e proponha um agrupamento. Descreva os clusters.
+
+Para ambos os métodos, vamos calcular a distância euclidiana entre os dados e utilizar a função _hclust_ do R selecionando o método desejado. Para avaliar os clusters, vamos buscar o maior "salto" na altura do agrupamento para fazer o corte e definir quantos e quais são os grupos.
+
+#### Complete Linkage
+
+```{r}
+d = dist(std_data[,-1], method = "euclidean")
+m = as.dist(d, diag = T)
+
+hc_complete=hclust(m, method = "complete") 
+h_comp = hc_complete$height
+diff_comp = numeric()
+for(i in 1:length(h_comp)-1){
+  diff_comp[i] = h_comp[i+1] - h_comp[i]
+}
+paste("Diferença de altura dos agrupamentos:")
+diff_comp
+```
+
+Observamos um maior salto no último agrupamento, resultando em 2 grupos: 
+
+```{r}
+plot(hc_complete, main = "Complete Linkage", hang=-1, labels=data[,1], xlab = "País" )
+rect.hclust(hc_complete, k=2, border=1:3)
+```
+
+#### Ward
+
+```{r}
+hc_ward=hclust(m, method = "ward.D2")
+h_ward = hc_ward$height
+diff_ward = numeric()
+for(i in 1:length(h_ward)-1){
+  diff_ward[i] = h_ward[i+1] - h_ward[i]
+}
+diff_ward
+```
+
+Da mesma forma, temos um maior salto no último agrupamento, resultando, também em 2 grupos:
+
+```{r}
+plot(hc_ward, main = "Ward", hang=-1, labels=std_data[,1], xlab = "País" )
+rect.hclust(hc_ward, k=2, border=1:3)
+```
+
+Observa-se que os agrupamentos foram iguais, tendo o primeiro grupo os países Nigéria, Brasil, Arábia Saudita e África do Sul, e o segundo grupo os demais. Vamos analisar as variáveis:
+```{r, include=F, echo=F}
+require(GGally)
+```
+
+Note que, através do método _cutree_ o grupo com Nigéria, Brasil, Arábia Saudita e África do Sul está classificado como 2:
+```{r}
+grupos=matrix(cutree(hc_complete, h=8), ncol=1)
+data = cbind(data, grupos)
+
+colMeans(data[data$grupos == 1,-1])
+colMeans(data[data$grupos == 2,-1])
+```
+
+Observamos que o grupo 2 (Nigéria, Brasil, Arábia Saudita e África do Sul) é formado por países com maior média de população, apesar de apresentar menor densidade populacional. Ainda, são países com média pior nos indicadores sociais, como expectativa de vida, alfabetização e mortalidade infantil.
+
+### b) Proceda a uma Análise de Cluster dos países utilizando o método k-means [com centroides iniciais aleatórios e semente set.seed(1)]. Defina um o número k de grupos a priori e justifique a escolha de k. Descreva os clusters.
+
+Vamos iniciar o algoritmo k-means com 2 grupos, pois foi o número de grupos obtidos no métodos hierárquicos.
+
+```{r}
+remove(list = ls())
+
+data = read.table("nacoes2.txt", header=T,sep="")
+colMeans(data[,2:9])
+std_data = data
+std_data[,2:9] = scale(std_data[,2:9])
+
+
+set.seed(1)
+km=kmeans(std_data[,-1],2) 
+km$cluster
+km$centers
+fit = cbind(data,km$cluster)
+
+fit[fit$`km$cluster`==1,1]
+fit[fit$`km$cluster`==2,1]
+```
+
+Observa-se que o agrupamento através do método k-means, com centroides iniciais aleatórios e 2 grupos definidos a priori, obtivemos os mesmos grupos encontrados nos métodos hierárquicos.
+
+Vamos avaliar os grupos através das componentes principais:
+```{r}
+pc<-prcomp(std_data[,-1], scale.= T)
+z<-pc$x
+
+plot(z[,1],z[,2],pch=16,col=km$cluster,xlab="pc1", ylab="pc2", main="Classificação por k-means em 2 grupos")
+text(z,labels=data[,1])
+
+```
+
+Observamos que, de fato, há uma separação entre estes dois grupos quando fazemos uma análise de componentes principais.
+
+## Exercício 3
