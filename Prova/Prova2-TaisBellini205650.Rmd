@@ -1,0 +1,139 @@
+---
+title: "EST204 - Estatística Multivariada 2020/3 - Prova 2"
+author: "Tais Bellini - 205650"
+date: "20/01/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercício 1
+
+Dados e análise exploratória: 
+
+```{r}
+#x1: Comprimento da mandibula
+#x2: Largura da mandíula abaixo do primeiro molar
+#x3: Largura do condilo articular
+#x4: Altura da mandibula abaixo do primeiro molar
+#x5: Comprimento do primeiro molar
+#x6: Largura do primeiro molar
+#x7: Comprimento do primeiro ao terceiro molar
+#x8: Comprimento do primeiro ao quarto premolar
+#x9: Largura do canino inferior
+
+
+data = read.table("BD1.txt", header=T,sep="")
+colnames(data) = c("id",  "c. mandibula", "l. mand. 1 molar", "l. cond art.", 
+                   "a. mand. 1 molar", "c. 1 molar", "l. 1 molar", 
+                   "c. 1-3 molar", "c. 1-4 premolar", "l. canino inf.", "raca")
+head(data[2:10])
+summary(data[2:10])
+```
+
+
+### Realize a ACP (sem rotação) e apresente os 2 maiores autovalores, os autovetores associados e o percentual acumulado da variação explicada. Interprete a estrutura de correlação dos dados usando os 2 “primeiros” autovetores.
+
+```{r, echo=F, include=F}
+library(devtools)
+#install_github("vqv/ggbiplot")
+
+library(ggbiplot)
+```
+
+Vamos utilizar a função do R _prcomp_ para determinar as componentes principais. Como temos valores discrepantes, vamos utilizar o parâmetro _scale = T_ para padronizar os dados.
+
+```{r}
+pca = prcomp(data[,2:10], scale. = T)
+pca
+paste("Maiores autovalores:")
+pca$sdev[1:2]^2
+paste("Autovetores associados, respectivamente:")
+pca$rotation[,1:2]
+```
+
+```{r}
+summary(pca)
+```
+
+Podemos observar que o percentual acumulado da variância explicada é 0.86.
+
+```{r}
+ggbiplot(pca, main = "Correlação das variáveis com PC1 e PC2") + theme_minimal() 
+t(cor(pca$x, data[,2:10])[1:2,])
+```
+
+Observa-se que a primeira componente principal é a soma ponderada de todas as variáveis. Já a segunda faz um contraste entre comprimento vs. altura e largura. Ainda, as medidas de dentes individuais possuem menos peso na componente.
+
+### b) Ordene os cães baseados nos escores do primeiro CPs e apresente a raça dos 20 com as maiores medidas. Esse ordenamento faz algum sentido? Justifique!
+
+```{r}
+n = nrow(data)
+ss=data.frame(ord=seq(1,n,by=1), y=pca$x[,1], raca = data[,11])
+ss_ord = ss[order(ss[,2], decreasing=T),]
+summary(data[,11])
+ss_ord[1:20,]
+```
+
+Oberva-se que há uma predominância dos Lobos indianos, sendo que todas as observações desta espécie estão nos primeiros 20, o que indica que é uma raça com predominância destas variáveis observadas, já que a primeira componente principal é uma ponderação de todas as variáveis. Se observarmos abaixo, a média das medidas das observações de Lobos Indianos é superior a média amostral para todas as variáveis.
+
+```{r}
+paste("Media das variaveis para Lobos Indianos:")
+apply(data[data$raca == "LobosIndianos",2:10], 2, mean)
+
+paste("Media das variaveis de todas as raças:")
+apply(data[,2:10], 2, mean)
+```
+
+### c) Realize a AF com 2 fatores (utilizando extração das cargas via máxima verossimilhança e rotação varimax) e apresente as cargas fatoriais, as variâncias dos fatores, o percentual acumulado da variação explicada, as comunalidades e a variância não explicada de cada variável. Interprete a estrutura de correlação dos dados usando os 2 primeiros fatores.
+
+Vamos utilizar a função _factanal_ que realiza a análise fatorial através do método de máxima verossimilhança e permite a escolha do método de rotação:
+```{r}
+fac=factanal(data[2:10],2, rotation="varimax", scores="regression")  
+```
+  
+#### Cargas fatoriais, variância dos fatores e percentual acumulado da variância explicada: 
+
+Abaixo, obtemos os resultados da análise fatorial, onde **Loadings** são as cargas fatoriais dos 2 fatores, **Proportional Var** é a variância de cada fator, (0.44 e 0.37, respectivamente) e o percentual acumulado da variância explicada, que é de 0.82.
+
+```{r}
+fac$loadings
+```
+
+#### Comunalidades:
+Sabemos que a comunalidade é contribuição dos _m_ fatores para explicar a variância da variável _i_. Ela se dá pela seguinte fórmula: 
+$$ \sum_{j=1}^{m}{l_{ij}}^2$$ 
+Onde: $l_{ij}$ é a j-ésima carga fatorial da variável i. 
+Portanto, neste caso em que temos dois fatores, calculamos a comunalidade como a soma dos quadrados das 2 cargas fatoriais para cada variável:
+
+```{r}
+comm = apply(fac$loadings, 1, function(l){sum(l^2)})
+comm
+```
+
+####Variância específica:
+A variância específica, por sua vez, é justamente a parte que não está inclusa nas cargas fatoriais dos fatores comuns, sendo única para aquela variável: 
+$$ \psi_i = \sigma_{ii} -  \sum_{j=1}^{m}{l_{ij}}^2$$
+Portanto, para os dados em análise, temos:
+```{r}
+# calculando manualmente, com os dados padronizados
+diag(var(scale(data[2:10]))) - comm
+```
+
+Padronizamos os dados pois eles possuem valores muito discrepantes entre eles, além de se o padrão da função _factanal_, usada para esta análise. Podemos obter a variância específica utilizando esta função também, e observamos que os resultados são praticamente os mesmos:
+
+```{r}
+v = fac$uniquenesses
+v
+```
+
+#### Interpretação
+
+```{r}
+plot(fac$loadings[,1], fac$loadings[,2], xlab = "Factor 1", ylab = "Factor 2")
+text(fac$loadings[,1]+0.008, fac$loadings[,2]-0.008, colnames(data[2:10]), col = "red", ylim= c(-1,1), xlim = c(-1,2))
+```
+
+  
