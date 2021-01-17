@@ -64,12 +64,12 @@ paste("Autovetores associados funcao eigen, respectivamente:")
 eig$vectors[,1:2]
 ```
 
-
+Agora vamos utilizar a função _summary_ no objeto gerado pela função _prcomp_ para obter a proporção da variância explicada acumulada das duas primeiras componentes principais:
 ```{r}
 summary(pca)
 ```
 
-Podemos observar que o percentual acumulado da variância explicada das duas primeiras componentes principais é 0.86.
+Podemos observar que o percentual acumulado da variância explicada das duas primeiras componentes principais é 86%.
 
 ```{r}
 ggbiplot(pca, main = "Correlação das variáveis com PC1 e PC2") + theme_minimal() 
@@ -80,6 +80,7 @@ Observa-se que a primeira componente principal é a soma ponderada de todas as v
 
 ### b) Ordene os cães baseados nos escores do primeiro CPs e apresente a raça dos 20 com as maiores medidas. Esse ordenamento faz algum sentido? Justifique!
 
+Vamos observar o número de observações de cada raça e os primeiros 20 animais observados de acordo com a classificação dos escores da primeira componente principal:
 ```{r}
 n = nrow(data)
 ss=data.frame(ord=seq(1,n,by=1), y=pca$x[,1], raca = data[,11])
@@ -107,7 +108,7 @@ fac=factanal(data[2:10],2, rotation="varimax", scores="regression")
   
 #### Cargas fatoriais, variância dos fatores e percentual acumulado da variância explicada: 
 
-Abaixo, obtemos os resultados da análise fatorial, onde **Loadings** são as cargas fatoriais dos 2 fatores, **Proportional Var** é a variância de cada fator, (0.44 e 0.37, respectivamente) e o percentual acumulado da variância explicada, que é de 0.82.
+Abaixo, obtemos os resultados da análise fatorial, onde **Loadings** são as cargas fatoriais dos 2 fatores, **Proportional Var** é a variância de cada fator, (0.44 e 0.37, respectivamente) e **Cumulative Var** o percentual acumulado da variância explicada, que é de 0.82.
 
 ```{r}
 fac$loadings
@@ -124,7 +125,7 @@ comm = apply(fac$loadings, 1, function(l){sum(l^2)})
 comm
 ```
 
-####Variância específica:
+#### Variância específica:
 A variância específica, por sua vez, é justamente a parte que não está inclusa nas cargas fatoriais dos fatores comuns, sendo única para aquela variável: 
 $$ \psi_i = \sigma_{ii} -  \sum_{j=1}^{m}{l_{ij}}^2$$
 Portanto, para os dados em análise, temos:
@@ -147,12 +148,12 @@ plot(fac$loadings[,1], fac$loadings[,2], xlab = "Factor 1", ylab = "Factor 2")
 text(fac$loadings[,1]+0.04, fac$loadings[,2]-0.008, colnames(data[2:10]), col = "red", ylim= c(-1,1), xlim = c(-1,2))
 ```
 
-Observamos que com a rotação temos as cargas do fator um com uma maior separação entre comprimento e largura/altura do que quando avaliamos via PCA. Neste caso, altura e largura possuem mais peso no Fator 1, enquanto no Fator 2 temos o comprimento com maiores valores.
+Observamos que, com a rotação, temos as cargas do Fator 1 com uma maior separação entre comprimento e largura/altura do que quando avaliamos via PCA. Neste caso, altura e largura possuem mais peso no Fator 1, enquanto no Fator 2 temos o comprimento com maiores valores.
 
 
 ## Exercicio 2
 
-Dados padronizados:
+Dados:
 
 ```{r}
 remove(list = ls())
@@ -209,12 +210,12 @@ plot(hc_ward, main = "Ward", hang=-1, labels=std_data[,1], xlab = "País" )
 rect.hclust(hc_ward, k=2, border=1:3)
 ```
 
-Observa-se que os agrupamentos foram iguais, tendo o primeiro grupo os países Nigéria, Brasil, Arábia Saudita e África do Sul, e o segundo grupo os demais. Vamos analisar as variáveis:
+Observa-se que os agrupamentos foram iguais, tendo no primeiro grupo os países Nigéria, Brasil, Arábia Saudita e África do Sul, e no segundo grupo os demais. Vamos analisar as variáveis:
 ```{r, include=F, echo=F}
 require(GGally)
 ```
 
-Note que, através do método _cutree_ o grupo com Nigéria, Brasil, Arábia Saudita e África do Sul está classificado como 2:
+Note que, através do método _cutree_, o grupo com Nigéria, Brasil, Arábia Saudita e África do Sul está classificado como 2:
 ```{r}
 grupos=matrix(cutree(hc_complete, h=8), ncol=1)
 data = cbind(data, grupos)
@@ -240,8 +241,6 @@ std_data[,2:9] = scale(std_data[,2:9])
 
 set.seed(1)
 km=kmeans(std_data[,-1],2) 
-km$cluster
-km$centers
 fit = cbind(data,km$cluster)
 
 fit[fit$`km$cluster`==1,1]
@@ -255,11 +254,12 @@ Vamos avaliar os grupos através das componentes principais:
 pc<-prcomp(std_data[,-1], scale.= T)
 z<-pc$x
 
-plot(z[,1],z[,2],pch=16,col=km$cluster,xlab="pc1", ylab="pc2", main="Classificação por k-means em 2 grupos")
+plot(z[,1],z[,2],pch=16,col=km$cluster,xlab="pc1", ylab="pc2", 
+     main="Classificação por k-means em 2 grupos")
 text(z,labels=data[,1])
 
 ```
 
-Observamos que, de fato, há uma separação entre estes dois grupos quando fazemos uma análise de componentes principais.
+Observamos que, de fato, há uma separação entre estes dois grupos quando olhamos para a primeira componente principal.
 
 ## Exercício 3
