@@ -263,3 +263,153 @@ text(z,labels=data[,1])
 Observamos que, de fato, há uma separação entre estes dois grupos quando olhamos para a primeira componente principal.
 
 ## Exercício 3
+
+Dados:
+
+$$ X_1 \sim N_3(\mu_1, \Sigma), X_2 \sim N_3(\mu_2, \Sigma)$$
+
+
+$$ \mu_1 = \begin{bmatrix} -3 \\ 1 \\ 4 \end{bmatrix}$$
+
+$$ \mu_2 = \begin{bmatrix} -1 \\ 0 \\ 3 \end{bmatrix}$$
+$$\Sigma = \begin{bmatrix}
+            1 & -2 & 0 \\
+            -2 & 5 & 0 \\
+            0 & 0 & 2
+            \end{bmatrix}$$
+            
+Ou seja,
+
+$$ f_1 \sim N_3(\mu_1, \Sigma), f_2 \sim N_3(\mu_2, \Sigma)$$
+            
+            
+### a) Admitindo os custos de classificação errada c(2/1) = 100,00 e c(1/2) = 50,00 e probabilidades a priori p1 = 0.7 e p2 = 0.3, encontre e mostre os coeficientes do vetor discriminante e a constante discriminante.
+
+Como temos que as populações seguem uma distribuição normal ($f_1$ e $f_2$), podemos determinar que, dada uma observação $x_0$, classificamos ela na populacão $\pi_1$ se:
+
+$$h(\mu_1, \mu_2, \Sigma) \geq ln\left(\frac{c(1|2)p_2}{c(2|1)p1}\right)$$
+No qual: 
+
+$$h(\mu_1, \mu_2, \Sigma) = (\mu_1-\mu_2)^\intercal\Sigma^{-1}x_0-\frac{1}{2}(\mu_1-\mu_2)^\intercal\Sigma^{-1}(\mu_1+\mu_2)$$
+
+Definindo $a = (\mu_1-\mu_2)^\intercal\Sigma^{-1}$, $m = \frac{1}{2}a^\intercal(\mu_1+\mu_2)$ e $y=a^\intercal x_0$, temos que os coeficientes do vetor determinante se dão pelo vetor $a^\intercal$:
+
+$$ a = (\mu_1-\mu_2)^\intercal\Sigma^{-1} = \left[-2, 1, 1\right] \begin{bmatrix}
+            5 & 2 & 0 \\
+            2 & 1 & 0 \\
+            0 & 0 & 0.5
+            \end{bmatrix} = \left[-8, 3, 0.5\right]$$ 
+
+Assim, separando os elementos constantes dos variáveis da equação, temos que, dado uma observação $x_0$, $$ y = \left[-8, 3, 0.5\right]\begin{bmatrix} x_{01} \\ x_{02} \\x_{03} \end{bmatrix}$$
+
+Se este valor de y for maior ou igual à constante discriminante definida abaixo, classificamos a observação no grupo $\pi_1$, caso contrário, no grupo $\pi_2$. 
+
+$$ m + ln\left(\frac{c(1|2)p_2}{c(2|1)p1}\right) = 16.25 + ln\left(\frac{15}{70}\right) = 16.25 - 1.54 = 14.71$$
+
+Calculando no R:
+```{r}
+mu1 = matrix(c(-3, 1, 4), ncol = 1)
+mu2 = matrix(c(-1, 0, 3), ncol = 1)
+sigma = cbind(c(1, -2, 0), c(-2, 5, 0), c(0, 0, 2))
+c12 = 50
+p2 = 0.3
+c21 = 100
+p1 = 0.7
+
+at = t((mu1-mu2))%*%solve(sigma)
+paste("Vetor discriminante a':")
+at
+paste("Constante discriminante:")
+m = (1/2)%*%at%*%(mu1+mu2)
+m + log((c12*p2)/(c21*p1))
+```
+
+
+### b) Considerando c(2/1) = c(1/2) e p1 = p2, calcule o TOE dessa regra. Classifique uma nova observação x' =[0,1,4]. 
+
+Se considerarmos $c(2|1) = c(1|2)$ e $p_1 = p_2$, então teremos que a razão $\frac{c(1|2)p_2}{c(2|1)p1}$ será igual a 1, e, portanto, seu logaritmo natural igual a zero. Assim, basta verificarmos se $$y = a^\intercal x_0 \geq m = 16.25$$ para definir se classificaremos uma nova observação no grupo $\pi_1$ ou no grupo $\pi_2$. 
+
+A taxa ótima de erro (TOE), neste caso, é obtida pela própria probabilidade total de classificação incorreta (PTCI) se o calcularmos através de um mecanismo de classificação ótimo. 
+
+Para calcular o PTCI, queremos definir as probabilidades de erro:
+
+$$PTCI = P(E_1) + P(E_2)$$
+
+$$ P(E_2) = P(2|1)p_1 = p_1P(Y_1 < m)$$ 
+$$ P(E_1) = P(1|2)p_2 = p_2P(Y_2 \geq m)$$
+
+Onde $Y_i \sim N_1(a^\intercal\mu_i, \Delta^2), \Delta^2 = a^\intercal(\mu_1-\mu_2), i = 1,2$
+
+Normalizando para a variável $Z$, temos:
+
+$$ P(Y_1 < m) = P(Y<\frac{1}{2}a^\intercal(\mu_1+\mu_2)) = P\left(Z < \left(\frac{1}{2}a^\intercal(\mu_1+\mu_2) - a^\intercal\mu_1)\right)\frac{1}{\Delta}\right) = P(Z < -\frac{\Delta}{2}) = \phi(-\frac{\Delta}{2})$$
+
+Analogamente, $P(Y_2 \geq m) = \phi(-\frac{\Delta}{2})$ 
+
+Portanto, 
+
+$$TOE = PTCI = P(E_1) + P(E_2) = p_1\phi(-\frac{\Delta}{2}) + p_2\phi(-\frac{\Delta}{2}) = (p_1 + p_2)\phi(-\frac{\Delta}{2})$$
+
+Como $p_1 = p_2$, temos que $TOE = \phi(-\frac{\Delta}{2}) = \phi(-\frac{\sqrt{a^\intercal(\mu_1-\mu_2)}}{2})$.
+
+Calculando no R:
+```{r}
+mu1 = matrix(c(-3, 1, 4), ncol = 1)
+mu2 = matrix(c(-1, 0, 3), ncol = 1)
+
+at = t((mu1-mu2))%*%solve(sigma)
+
+delta = sqrt(at%*%(mu1-mu2))
+paste("TOE:")
+pnorm(-(delta/2))
+
+```
+
+
+### c) Usando a semente set.seed(1), simule uma amostra de tamanho 100 de cada uma das populações, ajuste a função de Ficher aos dados (usando função lda do R), obtenha a matriz de confusão e o TAE. Mostre os coeficientes do vetor discriminante. 
+
+```{r, echo=F, include=F}
+require(MASS)
+require(mvtnorm)
+```
+
+Simulacão dos dados:
+```{r}
+n = 100
+mu1 = c(-3, 1, 4)
+mu2 = c(-1, 0, 3)
+sigma = cbind(c(1, -2, 0), c(-2, 5, 0), c(0, 0, 2))
+set.seed(1)
+x1 = rmvnorm(n, mean = mu1, sigma = sigma)
+x2 = rmvnorm(n, mean = mu2, sigma = sigma)
+
+data = rbind(x1, x2)
+data = cbind(data, c(rep(1, 100), rep(2,100)))
+
+colnames(data) = c("x1", "x2", "x3", "pop")
+data = as.data.frame(data)
+```
+
+Utilizando a função _lda_ do R para obter os resultados da análise discriminante nos dados gerados:
+```{r}
+ad = lda(data[,4]~., data[,1:3], prior = c(0.3, 0.7))
+ad
+```
+
+Para obter a matriz de confusão, vamos classificar as observações geradas baseado nos coeficientes encontrados pela função e determinar quantas classificações foram feitas corretamente e quantas incorretamente para cada grupo:
+
+```{r}
+pred = predict(ad)$class
+
+conf_matrix = table(data[,4],pred)
+conf_matrix
+```
+
+A taxa aparente de erro (TAE) se dá pela razão entre a soma das classificações erradas e o número total de observações:
+
+```{r}
+TAE=(conf_matrix[1,2]+conf_matrix[2,1])/nrow(data)
+TAE
+```
+
+A TAE encontrada foi de `r TAE`.
