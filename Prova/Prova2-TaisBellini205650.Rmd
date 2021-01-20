@@ -11,7 +11,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Exercício 1
 
-Dados e análise exploratória: 
+Dados: 
+
+```{r, include=F, echo=F}
+library(corrplot)
+library(RColorBrewer)
+```
+
 
 ```{r}
 #x1: Comprimento da mandibula
@@ -31,8 +37,12 @@ colnames(data) = c("id",  "c. mandibula", "l. mand. 1 molar", "l. cond art.",
                    "c. 1-3 molar", "c. 1-4 premolar", "l. canino inf.", "raca")
 head(data[,2:11])
 colMeans(data[,2:10])
+corr = cor(data[2:10])
+corr
+corrplot(corr, type="upper", order="hclust",cl.lim = c(0.4,1),
+         col=brewer.pal(n=8, name="RdYlBu"))
 ```
-
+Observamos que as medidas diferem bastante entre si (o que é esperado pois medem partes diferentes da arcada dentária dos cães tailandeses). Ainda, no geral, as maiores correlações estão entre medidas de comprimento (comprimento da mandíbula e comprimento do primeiro ao quarto molar, por exemplo) e de altura e largura (largura da mandíbula abaixo do primeiro molar e largura do canino inferior, por exemplo). 
 
 ### Realize a ACP (sem rotação) e apresente os 2 maiores autovalores, os autovetores associados e o percentual acumulado da variação explicada. Interprete a estrutura de correlação dos dados usando os 2 “primeiros” autovetores.
 
@@ -69,7 +79,7 @@ Agora vamos utilizar a função _summary_ no objeto gerado pela função _prcomp
 summary(pca)
 ```
 
-Podemos observar que o percentual acumulado da variância explicada das duas primeiras componentes principais é 86%.
+Podemos observar que o percentual acumulado da variância explicada das duas primeiras componentes principais é 86%, sendo que a proporção explicada apenas pela PC1 é de 0.78.
 
 ```{r}
 ggbiplot(pca, main = "Correlação das variáveis com PC1 e PC2") + theme_minimal() 
@@ -141,6 +151,18 @@ v = fac$uniquenesses
 v
 ```
 
+#### Resíduos
+
+Por fim, ainda podemos calcular a matriz de resíduos:
+```{r}
+load = fac$loadings
+E=load%*%t(load)+diag(v)
+
+Res=cor(data[,2:10])-E
+round(Res, 2)
+```
+
+
 #### Interpretação
 
 ```{r}
@@ -149,7 +171,7 @@ text(fac$loadings[,1]+0.04, fac$loadings[,2]-0.008, colnames(data[2:10]),
      col = "red", ylim= c(-1,1), xlim = c(-1,2))
 ```
 
-Observamos que, com a rotação, temos as cargas do Fator 1 com uma maior separação entre comprimento e largura/altura do que quando avaliamos via PCA. Neste caso, altura e largura possuem mais peso no Fator 1, enquanto no Fator 2 temos o comprimento com maiores valores.
+Observamos que, com a rotação, temos as cargas do Fator 1 com uma maior separação entre comprimento e largura/altura do que quando avaliamos via PCA, ficando mais próximo da separação da componente principal 2. Ainda observamos a mesma separação no Fator 2, assim como na componente principal 2. Neste caso, altura e largura possuem mais peso no Fator 1, enquanto no Fator 2 temos o comprimento com maiores valores. Em ambas análises, observamos que o comprimento do primeiro ao terceiro molar, assim como largura e altura da mandíbula possuem maior peso nos fatores e componentes principais.
 
 
 ## Exercicio 2
@@ -216,16 +238,19 @@ Observa-se que os agrupamentos foram iguais, tendo no primeiro grupo os países 
 require(GGally)
 ```
 
-Note que, através do método _cutree_, o grupo com Nigéria, Brasil, Arábia Saudita e África do Sul está classificado como 2:
+**Obs:** Através do método _cutree_, o grupo com Nigéria, Brasil, Arábia Saudita e África do Sul está classificado como 2, por isso o texto e o código estão "invertidos":
 ```{r}
 grupos=matrix(cutree(hc_complete, h=8), ncol=1)
 data = cbind(data, grupos)
 
-colMeans(data[data$grupos == 1,-1])
+paste("Grupo 1: Nigeria, Brasil, Arabia Saudita e Africa do Sul")
 colMeans(data[data$grupos == 2,-1])
+
+paste("Grupo 2: Demias países")
+colMeans(data[data$grupos == 1,-1])
 ```
 
-Observamos que o grupo 2 (Nigéria, Brasil, Arábia Saudita e África do Sul) é formado por países com maior média de população, apesar de apresentar menor densidade populacional. Ainda, são países com média pior nos indicadores sociais, como expectativa de vida, alfabetização e mortalidade infantil.
+Observamos que o Grupo 1 (Nigéria, Brasil, Arábia Saudita e África do Sul) é formado por países com maior média de população, apesar de apresentar menor densidade populacional. Ainda, são países com média pior nos indicadores sociais, como expectativa de vida, alfabetização e mortalidade infantil.
 
 ### b) Proceda a uma Análise de Cluster dos países utilizando o método k-means [com centroides iniciais aleatórios e semente set.seed(1)]. Defina um o número k de grupos a priori e justifique a escolha de k. Descreva os clusters.
 
