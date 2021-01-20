@@ -145,7 +145,8 @@ v
 
 ```{r}
 plot(fac$loadings[,1], fac$loadings[,2], xlab = "Factor 1", ylab = "Factor 2")
-text(fac$loadings[,1]+0.04, fac$loadings[,2]-0.008, colnames(data[2:10]), col = "red", ylim= c(-1,1), xlim = c(-1,2))
+text(fac$loadings[,1]+0.04, fac$loadings[,2]-0.008, colnames(data[2:10]), 
+     col = "red", ylim= c(-1,1), xlim = c(-1,2))
 ```
 
 Observamos que, com a rotação, temos as cargas do Fator 1 com uma maior separação entre comprimento e largura/altura do que quando avaliamos via PCA. Neste caso, altura e largura possuem mais peso no Fator 1, enquanto no Fator 2 temos o comprimento com maiores valores.
@@ -292,7 +293,7 @@ No qual:
 
 $$h(\mu_1, \mu_2, \Sigma) = (\mu_1-\mu_2)^\intercal\Sigma^{-1}x_0-\frac{1}{2}(\mu_1-\mu_2)^\intercal\Sigma^{-1}(\mu_1+\mu_2)$$
 
-Definindo $a = (\mu_1-\mu_2)^\intercal\Sigma^{-1}$, $m = \frac{1}{2}a^\intercal(\mu_1+\mu_2)$ e $y=a^\intercal x_0$, temos que os coeficientes do vetor determinante se dão pelo vetor $a^\intercal$:
+Definindo $a^\intercal = (\mu_1-\mu_2)^\intercal\Sigma^{-1}$, $m = \frac{1}{2}a^\intercal(\mu_1+\mu_2)$ e $y=a^\intercal x_0$, temos que os coeficientes do vetor determinante se dão pelo vetor $a^\intercal$:
 
 $$ a = (\mu_1-\mu_2)^\intercal\Sigma^{-1} = \left[-2, 1, 1\right] \begin{bmatrix}
             5 & 2 & 0 \\
@@ -350,7 +351,7 @@ Portanto,
 
 $$TOE = PTCI = P(E_1) + P(E_2) = p_1\phi(-\frac{\Delta}{2}) + p_2\phi(-\frac{\Delta}{2}) = (p_1 + p_2)\phi(-\frac{\Delta}{2})$$
 
-Como $p_1 = p_2$, temos que $TOE = \phi(-\frac{\Delta}{2}) = \phi(-\frac{\sqrt{a^\intercal(\mu_1-\mu_2)}}{2})$.
+Por definição, $p_1 + p_2 = 1$, logo, temos que $TOE = \phi(-\frac{\Delta}{2}) = \phi(-\frac{\sqrt{a^\intercal(\mu_1-\mu_2)}}{2})$.
 
 Calculando no R:
 ```{r}
@@ -361,10 +362,17 @@ at = t((mu1-mu2))%*%solve(sigma)
 
 delta = sqrt(at%*%(mu1-mu2))
 paste("TOE:")
-pnorm(-(delta/2))
-
+TOE = pnorm(-(delta/2))
+TOE
 ```
 
+A TOE encontrada foi de `r TOE`.
+
+Se colocarmos a observação $x_0^\intercal = [0,1,4]$ na equação, obtemos o seguinte resultado:
+
+$$y = a^\intercal \begin{bmatrix} 0 \\ 1 \\ 4 \end{bmatrix} = [-8, -3, 0.5] \begin{bmatrix} 0 \\ 1 \\ 4 \end{bmatrix} = -1 < m = 16.25$$
+
+Portanto, a observação $x_0^\intercal = [0,1,4]$ é classificada no grupo $\pi_2$.
 
 ### c) Usando a semente set.seed(1), simule uma amostra de tamanho 100 de cada uma das populações, ajuste a função de Ficher aos dados (usando função lda do R), obtenha a matriz de confusão e o TAE. Mostre os coeficientes do vetor discriminante. 
 
